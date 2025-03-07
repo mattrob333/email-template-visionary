@@ -1,10 +1,9 @@
 
 import { useState, useRef, useEffect } from 'react';
-import { Send, Bot, User, RefreshCcw, Shield, Loader2 } from 'lucide-react';
+import { Send, Bot, User, RefreshCcw, Shield, Loader2, Code } from 'lucide-react';
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { ScrollArea } from "@/components/ui/scroll-area";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { toast } from 'sonner';
 import { ChatMessage, getChatCompletion, hasOpenAIKey } from '../services/openai';
 import OpenAIKeyDialog from './OpenAIKeyDialog';
@@ -31,6 +30,7 @@ const AIChat = ({ htmlContent, onUpdateHtml }: AIChatProps) => {
   const [inputValue, setInputValue] = useState('');
   const [loading, setLoading] = useState(false);
   const [isKeyDialogOpen, setIsKeyDialogOpen] = useState(false);
+  const [showVariables, setShowVariables] = useState(false);
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLInputElement>(null);
 
@@ -129,24 +129,32 @@ const AIChat = ({ htmlContent, onUpdateHtml }: AIChatProps) => {
           <Bot className="mr-2 h-4 w-4" />
           HTML Editor Assistant
         </h2>
-        <Button 
-          variant="ghost" 
-          size="icon" 
-          className="h-7 w-7" 
-          onClick={() => setIsKeyDialogOpen(true)}
-          title="Configure OpenAI API Key"
-        >
-          <Shield className="h-3.5 w-3.5" />
-        </Button>
+        <div className="flex items-center space-x-1">
+          <Button 
+            variant="ghost" 
+            size="sm" 
+            className="h-7 text-xs font-normal"
+            onClick={() => setShowVariables(!showVariables)}
+          >
+            <Code className="h-3.5 w-3.5 mr-1" />
+            Variables
+          </Button>
+          <Button 
+            variant="ghost" 
+            size="icon" 
+            className="h-7 w-7" 
+            onClick={() => setIsKeyDialogOpen(true)}
+            title="Configure OpenAI API Key"
+          >
+            <Shield className="h-3.5 w-3.5" />
+          </Button>
+        </div>
       </div>
       
-      <Tabs defaultValue="chat" className="flex flex-col flex-1">
-        <TabsList className="mx-2 my-1 h-8">
-          <TabsTrigger value="chat" className="text-xs">Chat</TabsTrigger>
-          <TabsTrigger value="variables" className="text-xs">Variables</TabsTrigger>
-        </TabsList>
-        
-        <TabsContent value="chat" className="flex-1 flex flex-col p-0">
+      {showVariables ? (
+        <VariableManager htmlContent={htmlContent} onUpdateHtml={onUpdateHtml} />
+      ) : (
+        <div className="flex-1 flex flex-col p-0">
           <ScrollArea className="flex-1 p-2">
             <div className="space-y-2">
               {messages.map((message, index) => (
@@ -212,12 +220,8 @@ const AIChat = ({ htmlContent, onUpdateHtml }: AIChatProps) => {
               </Button>
             </div>
           </div>
-        </TabsContent>
-        
-        <TabsContent value="variables" className="flex-1 flex flex-col">
-          <VariableManager htmlContent={htmlContent} onUpdateHtml={onUpdateHtml} />
-        </TabsContent>
-      </Tabs>
+        </div>
+      )}
 
       <OpenAIKeyDialog 
         open={isKeyDialogOpen} 
