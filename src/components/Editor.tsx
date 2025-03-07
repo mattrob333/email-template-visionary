@@ -24,11 +24,11 @@ export const Editor = ({ value, onChange, isDarkMode }: EditorProps) => {
     // Custom editor theme for dark mode with colorful syntax
     const customTheme = EditorView.theme({
       "&": {
-        backgroundColor: "#1A1F2C",
+        backgroundColor: "#0D1117", // Deeper black background
         color: "#f8f8f2",
         height: "100%",
         fontSize: "14px",
-        fontFamily: "monospace"
+        fontFamily: "monospace",
       },
       ".cm-content": {
         padding: "10px"
@@ -36,33 +36,47 @@ export const Editor = ({ value, onChange, isDarkMode }: EditorProps) => {
       ".cm-line": {
         padding: "0 4px"
       },
-      // Tag names in purple
+      // Tag names in vibrant purple
       ".cm-tag": {
-        color: "#8B5CF6"
+        color: "#C678DD"
       },
-      // Attributes in orange
+      // Attributes in bright orange
       ".cm-attribute": {
-        color: "#F97316"
+        color: "#E5C07B"
       },
-      // Attribute values in cyan
+      // Attribute values in bright cyan/blue
       ".cm-attributeValue": {
-        color: "#0EA5E9"
+        color: "#61AFEF"
       },
-      // Text content in light green
+      // Text content in bright green - more visible
       ".cm-content .cm-text": {
-        color: "#F2FCE2"
+        color: "#98C379"
       },
-      // Comments in gray
+      // Special emphasis for content text inside tags
+      ".cm-content": {
+        color: "#E06C75"
+      },
+      // Comments in muted gray
       ".cm-comment": {
-        color: "#94a3b8"
+        color: "#7F848E",
+        fontStyle: "italic"
       },
       // Selection highlighting
       "&.cm-focused .cm-selectionBackground, .cm-selectionBackground": { 
         background: "rgba(137, 221, 255, 0.2)" 
       },
-      // Active line highlighting
+      // Active line highlighting - more visible
       ".cm-activeLine": {
-        backgroundColor: "rgba(255, 255, 255, 0.07)"
+        backgroundColor: "rgba(55, 65, 81, 0.5)"
+      },
+      // Gutters (line numbers)
+      ".cm-gutters": {
+        backgroundColor: "#0D1117",
+        color: "#545862",
+        border: "none"
+      },
+      ".cm-gutterElement": {
+        padding: "0 5px 0 3px"
       }
     });
 
@@ -74,6 +88,7 @@ export const Editor = ({ value, onChange, isDarkMode }: EditorProps) => {
         html(),
         keymap.of([indentWithTab]),
         customTheme,
+        EditorView.lineWrapping,
         EditorView.updateListener.of(update => {
           if (update.docChanged) {
             onChange(update.state.doc.toString());

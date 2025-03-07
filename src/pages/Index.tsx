@@ -1,8 +1,8 @@
-
 import { useState, useEffect, useRef } from 'react';
 import Navbar from '../components/Navbar';
 import { Editor } from '../components/Editor';
 import Preview, { PreviewRef } from '../components/Preview';
+import AIChat from '../components/AIChat';
 import { Template } from '../components/TemplateModal';
 import { useLocalStorage } from '../hooks/useLocalStorage';
 import { toast } from 'sonner';
@@ -11,6 +11,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { exportAsPdf } from '../utils/exportUtils';
+import { MessageSquare, Code } from 'lucide-react';
 
 const initialTemplate = `<!DOCTYPE html>
 <html>
@@ -64,9 +65,9 @@ const initialTemplate = `<!DOCTYPE html>
       <h1>Welcome to Our Newsletter</h1>
     </div>
     <div class="content">
-      <h2>Hello there!</h2>
+      <h2>Hello {{name}}!</h2>
       <p>Thank you for subscribing to our newsletter. We're excited to share the latest updates with you.</p>
-      <p>Here are some highlights from this week:</p>
+      <p>Here are some highlights from {{company}}:</p>
       <ul>
         <li>New product launch coming soon</li>
         <li>Exclusive discounts for subscribers</li>
@@ -76,7 +77,7 @@ const initialTemplate = `<!DOCTYPE html>
       <a href="#" class="button">Learn More</a>
     </div>
     <div class="footer">
-      <p>© 2023 Your Company. All rights reserved.</p>
+      <p>© 2023 {{company}}. All rights reserved.</p>
       <p>You're receiving this email because you signed up for our newsletter.</p>
       <p><a href="#">Unsubscribe</a> | <a href="#">View in browser</a></p>
     </div>
@@ -96,7 +97,8 @@ const Index = () => {
   const [orientation, setOrientation] = useState<'portrait' | 'landscape'>('portrait');
   const [showGuides, setShowGuides] = useState(false);
   const [isExporting, setIsExporting] = useState(false);
-  
+  const [showAIChat, setShowAIChat] = useState(false);
+
   const containerRef = useRef<HTMLDivElement>(null);
   const resizeHandleRef = useRef<HTMLDivElement>(null);
   const previewRef = useRef<PreviewRef>(null);
@@ -129,41 +131,9 @@ const Index = () => {
       return;
     }
 
-    // Capture thumbnail using previewRef
     let thumbnail = '';
     if (previewRef.current) {
-      try {
-        const iframe = previewRef.current.getIframeRef().current;
-        const iframeDocument = iframe.contentDocument || iframe.contentWindow?.document;
-        
-        if (iframeDocument && iframe.clientWidth && iframe.clientHeight) {
-          // Create a temporary canvas to capture the preview
-          const tempCanvas = document.createElement('canvas');
-          const context = tempCanvas.getContext('2d');
-          
-          if (context) {
-            // Scale down for thumbnail
-            const scale = 0.3;
-            const width = iframe.clientWidth * scale;
-            const height = iframe.clientHeight * scale;
-            
-            tempCanvas.width = width;
-            tempCanvas.height = height;
-            
-            // Fill with white background
-            context.fillStyle = '#FFFFFF';
-            context.fillRect(0, 0, width, height);
-            
-            // Scale the context
-            context.scale(scale, scale);
-            
-            // Get thumbnail as data URL
-            thumbnail = tempCanvas.toDataURL('image/png');
-          }
-        }
-      } catch (err) {
-        console.error('Error capturing thumbnail:', err);
-      }
+      thumbnail = previewRef.current.capturePreviewAsImage() || '';
     }
 
     const newTemplate: Template = {
@@ -173,7 +143,7 @@ const Index = () => {
       category: 'email',
       createdAt: new Date().toISOString(),
       updatedAt: new Date().toISOString(),
-      thumbnail: thumbnail, // Add the thumbnail
+      thumbnail: thumbnail,
     };
 
     setTemplates([...templates, newTemplate]);
@@ -186,17 +156,17 @@ const Index = () => {
     setHtmlContent(template.html);
     toast.success(`Loaded template: ${template.name}`);
   };
-  
+
   const handleInsertImage = (imageHtml: string) => {
     setHtmlContent(prev => prev + imageHtml);
     toast.success('Image inserted into template');
   };
-  
+
   const handleLoadNewTemplate = (html: string) => {
     setHtmlContent(html);
     toast.success('Template loaded');
   };
-  
+
   const handleExportPdf = () => {
     if (!previewRef.current) {
       toast.error('Preview not available');
@@ -205,7 +175,6 @@ const Index = () => {
     
     setIsExporting(true);
     
-    // Always use US Letter size for PDF export
     exportAsPdf(previewRef.current.getIframeRef(), {
       pageSize: 'letter',
       orientation: 'portrait',
@@ -221,6 +190,10 @@ const Index = () => {
       setIsExporting(false);
       toast.error('Failed to export PDF');
     });
+  };
+
+  const toggleAIChat = () => {
+    setShowAIChat(prev => !prev);
   };
 
   useEffect(() => {
@@ -279,6 +252,8 @@ const Index = () => {
         previewMode={previewMode}
         onExportPdf={handleExportPdf}
         isExporting={isExporting}
+        showAIChat={showAIChat}
+        toggleAIChat={toggleAIChat}
       />
       
       <main className="flex-1 container mx-auto p-4 pt-6">
@@ -288,11 +263,28 @@ const Index = () => {
               className="h-full transition-all-medium" 
               style={{ width: `${editorWidth}%` }}
             >
-              <Editor 
-                value={htmlContent} 
-                onChange={setHtmlContent} 
-                isDarkMode={isDarkMode}
-              />
+              {showAIChat ? (
+                <AIChat 
+                  htmlContent={htmlContent} 
+                  onUpdateHtml={setHtmlContent} 
+                />
+              ) : (
+                <Editor 
+                  value={htmlContent} 
+                  onChange={setHtmlContent} 
+                  isDarkMode={isDarkMode}
+                />
+              )}
+              
+              <Button
+                className="absolute left-4 bottom-4 z-10 opacity-80 hover:opacity-100"
+                size="sm"
+                variant="secondary"
+                onClick={toggleAIChat}
+              >
+                {showAIChat ? <Code className="mr-2 h-4 w-4" /> : <MessageSquare className="mr-2 h-4 w-4" />}
+                {showAIChat ? 'Edit Code' : 'AI Chat'}
+              </Button>
             </div>
             
             <div 

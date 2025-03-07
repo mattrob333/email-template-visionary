@@ -1,6 +1,4 @@
 
-@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap');
-
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
@@ -8,82 +6,47 @@
 @layer base {
   :root {
     --background: 0 0% 100%;
-    --foreground: 210 40% 10%;
-
+    --foreground: 240 10% 3.9%;
     --card: 0 0% 100%;
-    --card-foreground: 210 40% 10%;
-
+    --card-foreground: 240 10% 3.9%;
     --popover: 0 0% 100%;
-    --popover-foreground: 210 40% 10%;
-
-    --primary: 210 100% 50%;
-    --primary-foreground: 0 0% 100%;
-
-    --secondary: 210 40% 96.1%;
-    --secondary-foreground: 210 50% 20%;
-
-    --muted: 210 40% 96.1%;
-    --muted-foreground: 215.4 16.3% 46.9%;
-
-    --accent: 210 100% 50%;
-    --accent-foreground: 0 0% 100%;
-
+    --popover-foreground: 240 10% 3.9%;
+    --primary: 240 5.9% 10%;
+    --primary-foreground: 0 0% 98%;
+    --secondary: 240 4.8% 95.9%;
+    --secondary-foreground: 240 5.9% 10%;
+    --muted: 240 4.8% 95.9%;
+    --muted-foreground: 240 3.8% 46.1%;
+    --accent: 240 4.8% 95.9%;
+    --accent-foreground: 240 5.9% 10%;
     --destructive: 0 84.2% 60.2%;
-    --destructive-foreground: 210 40% 98%;
-
-    --border: 214.3 31.8% 91.4%;
-    --input: 214.3 31.8% 91.4%;
-    --ring: 215 20.2% 65.1%;
-
+    --destructive-foreground: 0 0% 98%;
+    --border: 240 5.9% 90%;
+    --input: 240 5.9% 90%;
+    --ring: 240 5.9% 10%;
     --radius: 0.5rem;
-
-    --sidebar-background: 0 0% 100%;
-    --sidebar-foreground: 240 5.3% 26.1%;
-    --sidebar-primary: 240 5.9% 10%;
-    --sidebar-primary-foreground: 0 0% 98%;
-    --sidebar-accent: 240 4.8% 95.9%;
-    --sidebar-accent-foreground: 240 5.9% 10%;
-    --sidebar-border: 220 13% 91%;
-    --sidebar-ring: 217.2 91.2% 59.8%;
   }
 
   .dark {
-    --background: 210 40% 4%;
-    --foreground: 210 40% 98%;
-
-    --card: 210 40% 8%;
-    --card-foreground: 210 40% 98%;
-
-    --popover: 210 40% 4%;
-    --popover-foreground: 210 40% 98%;
-
-    --primary: 210 100% 50%;
-    --primary-foreground: 0 0% 100%;
-
-    --secondary: 210 40% 14%;
-    --secondary-foreground: 210 40% 98%;
-
-    --muted: 210 40% 14%;
-    --muted-foreground: 215 20.2% 65.1%;
-
-    --accent: 210 100% 45%;
-    --accent-foreground: 0 0% 100%;
-
-    --destructive: 0 62.8% 45%;
-    --destructive-foreground: 210 40% 98%;
-
-    --border: 210 40% 20%;
-    --input: 210 40% 20%;
-    --ring: 215 30% 45%;
-
-    --sidebar-background: 240 5.9% 10%;
-    --sidebar-foreground: 240 4.8% 95.9%;
-    --sidebar-primary: 224.3 76.3% 48%;
-    --sidebar-primary-foreground: 0 0% 100%;
-    --sidebar-accent: 240 3.7% 15.9%;
-    --sidebar-accent-foreground: 240 4.8% 95.9%;
-    --sidebar-border: 240 3.7% 15.9%;
-    --sidebar-ring: 217.2 91.2% 59.8%;
+    --background: 240 10% 3.9%;
+    --foreground: 0 0% 98%;
+    --card: 240 10% 3.9%;
+    --card-foreground: 0 0% 98%;
+    --popover: 240 10% 3.9%;
+    --popover-foreground: 0 0% 98%;
+    --primary: 0 0% 98%;
+    --primary-foreground: 240 5.9% 10%;
+    --secondary: 240 3.7% 15.9%;
+    --secondary-foreground: 0 0% 98%;
+    --muted: 240 3.7% 15.9%;
+    --muted-foreground: 240 5% 64.9%;
+    --accent: 240 3.7% 15.9%;
+    --accent-foreground: 0 0% 98%;
+    --destructive: 0 62.8% 30.6%;
+    --destructive-foreground: 0 0% 98%;
+    --border: 240 3.7% 15.9%;
+    --input: 240 3.7% 15.9%;
+    --ring: 240 4.9% 83.9%;
   }
 }
 
@@ -91,94 +54,34 @@
   * {
     @apply border-border;
   }
-
   body {
-    @apply bg-background text-foreground font-sans;
-    font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, 'Open Sans', 'Helvetica Neue', sans-serif;
+    @apply bg-background text-foreground;
+    font-feature-settings: "rlig" 1, "calt" 1;
   }
 }
 
-@layer utilities {
-  .editor-container {
-    height: calc(100vh - 10rem);
-  }
-  
-  .transition-all-fast {
-    transition: all 0.2s ease;
-  }
-  
-  .transition-all-medium {
-    transition: all 0.3s ease;
-  }
-  
-  .transition-transform-medium {
-    transition: transform 0.3s ease;
-  }
-  
-  .glass-panel {
-    @apply bg-background/80 backdrop-blur-md border border-border/40 shadow-lg;
-  }
-  
-  .glass-button {
-    @apply bg-primary/90 backdrop-blur-sm hover:bg-primary/100 transition-all-fast shadow-md hover:shadow-lg active:shadow-sm;
-  }
+/* Glass panel effect */
+.glass-panel {
+  @apply bg-background/95 backdrop-blur-sm border border-border/50 shadow-lg;
 }
 
-/* CodeMirror Editor Styles */
-.cm-editor {
-  @apply font-mono text-sm rounded-md overflow-hidden border border-border/50;
-  height: 100%;
-}
-
-.cm-editor .cm-scroller {
-  @apply font-mono;
-}
-
-.cm-editor .cm-content {
-  @apply p-4;
-}
-
-.cm-editor .cm-activeLine {
-  @apply bg-accent/5;
-}
-
-.cm-editor .cm-activeLineGutter {
-  @apply bg-accent/10;
-}
-
-.cm-editor .cm-gutters {
-  @apply bg-secondary border-r border-border/50 select-none;
-}
-
-.cm-editor.cm-focused {
-  @apply outline-none ring-1 ring-primary/30;
-}
-
-/* Email preview iframe */
-.email-preview iframe {
-  @apply w-full h-full bg-white;
-  border: none;
-}
-
+/* Editor resize handle */
 .resize-handle {
-  @apply bg-border/60 hover:bg-primary/50 w-1 cursor-col-resize transition-colors;
+  @apply w-1 bg-border/30 cursor-col-resize hover:bg-primary/50 hover:w-1.5 transition-all;
+  z-index: 10;
 }
 
-/* Animation utility classes */
-.animate-in {
-  animation: fadeIn 0.3s ease forwards;
+/* Transitions */
+.transition-all-medium {
+  @apply transition-all duration-300 ease-in-out;
 }
 
-.animate-out {
-  animation: fadeOut 0.3s ease forwards;
+/* Animations */
+.animate-fade-in {
+  animation: fadeIn 0.3s ease-in-out;
 }
 
 @keyframes fadeIn {
-  from { opacity: 0; transform: translateY(10px); }
-  to { opacity: 1; transform: translateY(0); }
-}
-
-@keyframes fadeOut {
-  from { opacity: 1; transform: translateY(0); }
-  to { opacity: 0; transform: translateY(10px); }
+  from { opacity: 0; }
+  to { opacity: 1; }
 }
