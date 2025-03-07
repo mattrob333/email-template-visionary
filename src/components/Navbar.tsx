@@ -1,6 +1,5 @@
-
 import { useState } from 'react';
-import { Moon, Sun, Save, FileCode, Image, Menu, Copy, MessageSquare } from 'lucide-react';
+import { Moon, Sun, Save, FileCode, Image, Menu, Copy, FileIcon } from 'lucide-react';
 import { Button } from "@/components/ui/button";
 import { TemplateModal } from './TemplateModal';
 import TemplateSelector from './TemplateSelector';
@@ -133,7 +132,7 @@ const Navbar = ({
               onClick={onExportPdf}
               disabled={isExporting}
             >
-              <FileText className="h-4 w-4 mr-1" />
+              <FileIcon className="h-4 w-4 mr-1" />
               {isExporting ? 'Exporting...' : 'Export PDF'}
             </Button>
             
@@ -166,7 +165,7 @@ const Navbar = ({
                   <Copy className="h-4 w-4 mr-2" /> Copy for Gmail
                 </DropdownMenuItem>
                 <DropdownMenuItem onClick={onExportPdf} disabled={isExporting}>
-                  <FileText className="h-4 w-4 mr-2" />
+                  <FileIcon className="h-4 w-4 mr-2" />
                   {isExporting ? 'Exporting...' : 'Export PDF'}
                 </DropdownMenuItem>
                 <DropdownMenuSeparator />
