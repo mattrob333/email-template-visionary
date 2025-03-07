@@ -1,4 +1,3 @@
-
 import { useState, useRef, useEffect } from 'react';
 import { Send, Bot, User, RefreshCcw, Shield, Loader2, Code, GripVertical, ImagePlus } from 'lucide-react';
 import { Button } from "@/components/ui/button";
@@ -39,12 +38,10 @@ const AIChat = ({ htmlContent, onUpdateHtml }: AIChatProps) => {
   const resizerRef = useRef<HTMLDivElement>(null);
   const isResizingRef = useRef(false);
 
-  // Scroll to bottom when messages change
   useEffect(() => {
     messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
   }, [messages]);
 
-  // Handle chat area resizing
   useEffect(() => {
     const resizer = resizerRef.current;
     if (!resizer) return;
@@ -60,7 +57,6 @@ const AIChat = ({ htmlContent, onUpdateHtml }: AIChatProps) => {
     const onMouseMove = (e: MouseEvent) => {
       if (!isResizingRef.current) return;
       
-      // Calculate height based on mouse position from bottom of container
       const containerRect = resizer.parentElement?.getBoundingClientRect();
       if (containerRect) {
         const newHeight = Math.max(150, Math.min(500, containerRect.bottom - e.clientY));
@@ -91,7 +87,6 @@ const AIChat = ({ htmlContent, onUpdateHtml }: AIChatProps) => {
       return;
     }
     
-    // Add user message
     const userMessage: Message = {
       role: 'user',
       content: inputValue,
@@ -103,7 +98,6 @@ const AIChat = ({ htmlContent, onUpdateHtml }: AIChatProps) => {
     setLoading(true);
     
     try {
-      // Prepare messages for OpenAI API
       const apiMessages: ChatMessage[] = messages
         .filter(m => m.role !== 'system')
         .map(m => ({
@@ -111,20 +105,16 @@ const AIChat = ({ htmlContent, onUpdateHtml }: AIChatProps) => {
           content: m.content
         }));
       
-      // Add the new user message
       apiMessages.push({
         role: 'user',
         content: userMessage.content
       });
       
-      // Get response from OpenAI
       const response = await getChatCompletion(apiMessages, htmlContent);
       
       if (response) {
-        // Update the HTML editor with the response
         onUpdateHtml(response);
         
-        // Add confirmation to the chat
         const aiResponse: Message = {
           role: 'assistant',
           content: 'HTML updated according to your request.',
@@ -156,10 +146,8 @@ const AIChat = ({ htmlContent, onUpdateHtml }: AIChatProps) => {
   };
 
   const handleInsertImage = (imageHtml: string) => {
-    // Directly update the HTML with the new image
     onUpdateHtml(htmlContent + "\n" + imageHtml);
     
-    // Add system message about the image insertion
     const imageInsertedMessage: Message = {
       role: 'system',
       content: 'Image has been added to the template. You can now ask the AI to position or style it.',
@@ -247,7 +235,7 @@ const AIChat = ({ htmlContent, onUpdateHtml }: AIChatProps) => {
             </div>
           </ScrollArea>
           
-          <div className="p-2 border-t border-border/40 bg-black/5">
+          <div className="p-2 border-t border-border/40 bg-background">
             <div className="flex space-x-2">
               <Button 
                 variant="outline" 
@@ -274,7 +262,7 @@ const AIChat = ({ htmlContent, onUpdateHtml }: AIChatProps) => {
                 onKeyDown={handleKeyDown}
                 placeholder={hasOpenAIKey() ? "Describe changes to make to the HTML..." : "Add OpenAI API key to start editing..."}
                 disabled={loading}
-                className="flex-1 h-8 text-sm"
+                className="flex-1 h-8 text-sm bg-gray-100 dark:bg-gray-800 text-gray-900 dark:text-gray-100 border-gray-300 dark:border-gray-700"
               />
               <Button 
                 onClick={handleSendMessage} 
@@ -307,12 +295,10 @@ const AIChat = ({ htmlContent, onUpdateHtml }: AIChatProps) => {
   );
 };
 
-// Template Variable Manager Component
 const VariableManager = ({ htmlContent, onUpdateHtml }: AIChatProps) => {
   const [variables, setVariables] = useState<Record<string, string>>({});
   const [previewHtml, setPreviewHtml] = useState(htmlContent);
   
-  // Extract variables from HTML on component mount and when HTML changes
   useEffect(() => {
     const extractedVars: Record<string, string> = {};
     const regex = /\{\{([^}]+)\}\}/g;
@@ -326,7 +312,6 @@ const VariableManager = ({ htmlContent, onUpdateHtml }: AIChatProps) => {
     }
     
     setVariables(extractedVars);
-    // Reset preview HTML when source changes
     setPreviewHtml(htmlContent);
   }, [htmlContent]);
   
@@ -340,32 +325,27 @@ const VariableManager = ({ htmlContent, onUpdateHtml }: AIChatProps) => {
   const applyVariables = () => {
     let updatedHtml = htmlContent;
     
-    // Replace all variables in the HTML
     Object.entries(variables).forEach(([name, value]) => {
       const regex = new RegExp(`\\{\\{\\s*${name}\\s*\\}\\}`, 'g');
       updatedHtml = updatedHtml.replace(regex, value);
     });
     
-    // Update the preview
     setPreviewHtml(updatedHtml);
   };
   
   const saveWithVariables = () => {
     let updatedHtml = htmlContent;
     
-    // Replace all variables in the HTML
     Object.entries(variables).forEach(([name, value]) => {
       const regex = new RegExp(`\\{\\{\\s*${name}\\s*\\}\\}`, 'g');
       updatedHtml = updatedHtml.replace(regex, value);
     });
     
-    // Update the actual HTML content
     onUpdateHtml(updatedHtml);
     toast.success('Template updated with your variables');
   };
   
   const insertVariableIntoTemplate = (name: string) => {
-    // Insert {{variableName}} at cursor position or at the end
     const updatedHtml = htmlContent + `\n<!-- Example usage: -->\n<p>{{${name}}}</p>`;
     onUpdateHtml(updatedHtml);
     toast.success(`Variable {{${name}}} added to template`);
