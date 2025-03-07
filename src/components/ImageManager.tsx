@@ -1,4 +1,3 @@
-
 import { useState, useRef } from 'react';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
@@ -13,6 +12,7 @@ import { Image, Upload, Crop, Trash, QrCode, Copy } from 'lucide-react';
 import ReactCrop, { Crop as CropType } from 'react-image-crop';
 import 'react-image-crop/dist/ReactCrop.css';
 import { QRCodeSVG } from 'qrcode.react';
+import React from 'react';
 
 export interface ImageItem {
   id: string;
@@ -38,7 +38,6 @@ const ImageManager = ({ isOpen, onClose, onInsertImage }: ImageManagerProps) => 
   const [newImageAlt, setNewImageAlt] = useState('');
   const [imageType, setImageType] = useState<'header' | 'logo' | 'product' | 'qrcode' | 'other'>('other');
   
-  // For image cropping
   const [uploadedImage, setUploadedImage] = useState<string | null>(null);
   const [crop, setCrop] = useState<CropType>({
     unit: '%',
@@ -49,7 +48,6 @@ const ImageManager = ({ isOpen, onClose, onInsertImage }: ImageManagerProps) => 
   });
   const imageRef = useRef<HTMLImageElement | null>(null);
   
-  // For QR code generation
   const [qrCodeValue, setQrCodeValue] = useState('https://example.com');
   const [qrCodeSize, setQrCodeSize] = useState(300);
   const [qrCodeColor, setQrCodeColor] = useState('#000000');
@@ -98,7 +96,6 @@ const ImageManager = ({ isOpen, onClose, onInsertImage }: ImageManagerProps) => 
     
     const base64Image = canvas.toDataURL('image/jpeg', 0.9);
     
-    // Create image object
     const newImage: ImageItem = {
       id: Date.now().toString(),
       name: `Image ${images.length + 1}`,
@@ -121,7 +118,6 @@ const ImageManager = ({ isOpen, onClose, onInsertImage }: ImageManagerProps) => 
       return;
     }
     
-    // Create QR code canvas and convert to data URL
     const qrCodeElement = document.getElementById('qr-code-preview');
     if (!qrCodeElement) return;
     
@@ -132,17 +128,14 @@ const ImageManager = ({ isOpen, onClose, onInsertImage }: ImageManagerProps) => 
     const ctx = canvas.getContext('2d');
     if (!ctx) return;
     
-    // First fill with background color
     ctx.fillStyle = qrCodeBgColor;
     ctx.fillRect(0, 0, canvas.width, canvas.height);
     
-    // Then draw the QR code SVG
     const svgData = new XMLSerializer().serializeToString(qrCodeElement.querySelector('svg') as SVGElement);
     const img = new Image();
     img.onload = () => {
       ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
       
-      // Save the QR code as an image
       const qrCodeImage: ImageItem = {
         id: Date.now().toString(),
         name: `QR Code: ${qrCodeValue.substring(0, 20)}${qrCodeValue.length > 20 ? '...' : ''}`,
@@ -180,10 +173,8 @@ const ImageManager = ({ isOpen, onClose, onInsertImage }: ImageManagerProps) => 
       return;
     }
     
-    // Generate image HTML with appropriate size attributes based on type
     let imageHtml = `<img src="${selectedImage.url}" alt="${selectedImage.altText}" `;
     
-    // Set appropriate size based on image type
     if (selectedImage.type === 'header') {
       imageHtml += `width="600" style="width: 100%; max-width: 600px; height: auto;"`;
     } else if (selectedImage.type === 'logo') {
@@ -193,7 +184,6 @@ const ImageManager = ({ isOpen, onClose, onInsertImage }: ImageManagerProps) => 
     } else if (selectedImage.type === 'product') {
       imageHtml += `width="400" height="400" style="width: 400px; height: 400px;"`;
     } else {
-      // Use original dimensions
       imageHtml += `width="${selectedImage.width}" height="${selectedImage.height}" style="width: auto; height: auto; max-width: 100%;"`;
     }
     

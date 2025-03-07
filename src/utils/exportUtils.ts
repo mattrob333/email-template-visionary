@@ -113,17 +113,54 @@ export const exportAsPdf = async (
 
 /**
  * Generate a QR code data URL
+ * Using qrcode.react directly instead of the qrcode library
  */
 export const generateQRCode = async (text: string, size = 300): Promise<string> => {
   try {
-    const QRCode = (await import('qrcode')).default;
-    return await QRCode.toDataURL(text, {
-      width: size,
-      margin: 1,
-      color: {
-        dark: '#000000',
-        light: '#ffffff'
-      }
+    // Create a temporary container for the QR code
+    const tempContainer = document.createElement('div');
+    document.body.appendChild(tempContainer);
+    
+    // Dynamically import QRCodeSVG from qrcode.react
+    const { QRCodeSVG } = await import('qrcode.react');
+    
+    // Render the QR code to get its SVG content
+    const ReactDOM = await import('react-dom/client');
+    const root = ReactDOM.createRoot(tempContainer);
+    
+    // Create a promise to capture when the QR code is rendered
+    return new Promise((resolve) => {
+      root.render(
+        React.createElement(QRCodeSVG, {
+          value: text,
+          size: size,
+          level: "M",
+          fgColor: "#000000",
+          bgColor: "#ffffff",
+          ref: (node) => {
+            if (node) {
+              // Convert the SVG to a data URL
+              const svgString = new XMLSerializer().serializeToString(node);
+              const dataUrl = `data:image/svg+xml;base64,${btoa(svgString)}`;
+              
+              // Clean up
+              root.unmount();
+              document.body.removeChild(tempContainer);
+              
+              resolve(dataUrl);
+            }
+          }
+        })
+      );
+      
+      // Fallback in case the ref callback doesn't fire
+      setTimeout(() => {
+        if (tempContainer.parentNode) {
+          root.unmount();
+          document.body.removeChild(tempContainer);
+          resolve('');
+        }
+      }, 1000);
     });
   } catch (err) {
     console.error('Failed to generate QR code: ', err);
