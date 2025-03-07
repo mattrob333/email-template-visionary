@@ -1,5 +1,5 @@
 import { useState, useRef, useEffect } from 'react';
-import { Send, Bot, User, RefreshCcw, Shield, Loader2, Code, GripVertical, ImagePlus } from 'lucide-react';
+import { Send, Bot, User, RefreshCcw, Shield, Loader2, Code, GripHorizontal, ImagePlus } from 'lucide-react';
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { ScrollArea } from "@/components/ui/scroll-area";
@@ -71,7 +71,7 @@ const AIChat = ({
       // Calculate how far the mouse has moved
       const deltaY = startYRef.current - e.clientY;
       
-      // Calculate new height
+      // Calculate new height (increase when moving up, decrease when moving down)
       const newHeight = Math.max(150, Math.min(500, startHeightRef.current + deltaY));
       
       setChatHeight(newHeight);
@@ -167,12 +167,10 @@ const AIChat = ({
   return <div className="flex flex-col h-full">
       <div 
         ref={resizerRef} 
-        className="w-full h-1 bg-border/30 cursor-row-resize hover:bg-primary/50 hover:h-1.5 -mt-1 transition-all" 
+        className="chat-resize-handle" 
         title="Drag to resize"
       >
-        <div className="flex justify-center items-center h-full">
-          <GripVertical className="h-3 w-3 text-muted-foreground/60" />
-        </div>
+        <GripHorizontal className="chat-resize-handle-icon h-4 w-4" />
       </div>
       
       <div className="p-2 border-b border-border/40 bg-black/10 flex justify-between items-center">
