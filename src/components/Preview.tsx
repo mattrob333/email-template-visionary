@@ -1,4 +1,3 @@
-
 import { useRef, useEffect, forwardRef, useImperativeHandle } from 'react';
 import { sanitizeHtml } from '../utils/exportUtils';
 import { ScrollArea } from '@/components/ui/scroll-area';
@@ -34,35 +33,72 @@ const Preview = forwardRef<PreviewRef, PreviewProps>(({
         const iframe = iframeRef.current;
         const iframeDocument = iframe.contentDocument || iframe.contentWindow?.document;
         
-        if (iframeDocument && iframe.clientWidth && iframe.clientHeight) {
-          // Create a temporary canvas to capture the preview
-          const tempCanvas = document.createElement('canvas');
-          const context = tempCanvas.getContext('2d');
-          
-          if (context) {
-            // Set canvas dimensions (scale down for thumbnail)
-            const scale = 0.3;
-            const width = iframe.clientWidth * scale;
-            const height = iframe.clientHeight * scale;
-            
-            tempCanvas.width = width;
-            tempCanvas.height = height;
-            
-            // Fill with white background for transparency
-            context.fillStyle = '#FFFFFF';
-            context.fillRect(0, 0, width, height);
-            
-            // Scale the context
-            context.scale(scale, scale);
-            
-            // Return as data URL
-            return tempCanvas.toDataURL('image/png');
-          }
-        }
-        return null;
+        if (!iframeDocument) return null;
+
+        const canvas = document.createElement('canvas');
+        
+        const scale = 0.3;
+        const width = iframe.offsetWidth * scale;
+        const height = iframe.offsetHeight * scale;
+        
+        canvas.width = width;
+        canvas.height = height;
+        
+        const ctx = canvas.getContext('2d');
+        if (!ctx) return null;
+        
+        ctx.fillStyle = '#FFFFFF';
+        ctx.fillRect(0, 0, width, height);
+        
+        const img = new Image();
+        const htmlSvg = `
+          <svg xmlns="http://www.w3.org/2000/svg" width="${iframe.offsetWidth}" height="${iframe.offsetHeight}">
+            <foreignObject width="100%" height="100%">
+              <div xmlns="http://www.w3.org/1999/xhtml">
+                ${htmlContent}
+              </div>
+            </foreignObject>
+          </svg>
+        `;
+        
+        const svgBlob = new Blob([htmlSvg], { type: 'image/svg+xml;charset=utf-8' });
+        const DOMURL = window.URL || window.webkitURL || window;
+        const url = DOMURL.createObjectURL(svgBlob);
+        
+        ctx.scale(scale, scale);
+        ctx.drawImage(iframe, 0, 0);
+        
+        const dataUrl = canvas.toDataURL('image/png');
+        console.log('Thumbnail generated successfully');
+        return dataUrl;
       } catch (err) {
         console.error('Error capturing preview as image:', err);
-        return null;
+        
+        try {
+          const iframe = iframeRef.current;
+          if (!iframe) return null;
+          
+          const canvas = document.createElement('canvas');
+          
+          canvas.width = 300;
+          canvas.height = 200;
+          
+          const ctx = canvas.getContext('2d');
+          if (!ctx) return null;
+          
+          ctx.fillStyle = '#f5f5f5';
+          ctx.fillRect(0, 0, canvas.width, canvas.height);
+          
+          ctx.fillStyle = '#333';
+          ctx.font = '16px Arial';
+          ctx.textAlign = 'center';
+          ctx.fillText('Template Preview', canvas.width / 2, canvas.height / 2);
+          
+          return canvas.toDataURL('image/png');
+        } catch (fallbackErr) {
+          console.error('Fallback thumbnail generation failed:', fallbackErr);
+          return null;
+        }
       }
     }
   }));
@@ -75,14 +111,11 @@ const Preview = forwardRef<PreviewRef, PreviewProps>(({
       if (document) {
         document.open();
         
-        // Add print-specific styles if in print mode
         let styledHtml = sanitizeHtml(htmlContent);
         
         if (previewMode === 'print') {
-          // Get dimensions in pixels (approximation)
           const dimensions = getPaperDimensions(paperSize, orientation);
           
-          // Insert print-specific styles
           const printStyles = `
             <style>
               @page {
@@ -128,7 +161,6 @@ const Preview = forwardRef<PreviewRef, PreviewProps>(({
             </style>
           `;
           
-          // Insert styles right after the <head> tag
           styledHtml = styledHtml.replace(/<head>/, `<head>${printStyles}`);
         }
         
@@ -138,9 +170,7 @@ const Preview = forwardRef<PreviewRef, PreviewProps>(({
     }
   }, [htmlContent, previewMode, paperSize, orientation, showGuides]);
 
-  // Get paper dimensions (approximation in pixels)
   const getPaperDimensions = (size: string, orient: string) => {
-    // Pixels per inch (approximate for display)
     const PPI = 96;
     
     let width, height;
@@ -157,12 +187,10 @@ const Preview = forwardRef<PreviewRef, PreviewProps>(({
       : { width, height };
   };
 
-  // Apply container style based on preview mode
   const previewContainerClass = previewMode === 'print' 
     ? 'w-full h-full bg-gray-100 p-6 flex justify-center'
     : 'w-full h-full';
 
-  // Apply iframe style based on preview mode
   const iframeStyle = previewMode === 'print' 
     ? {
         backgroundColor: 'white',
