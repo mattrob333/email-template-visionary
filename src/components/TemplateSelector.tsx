@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
@@ -8,6 +7,7 @@ import { Button } from "@/components/ui/button";
 import { toast } from "sonner";
 import { Copy } from "lucide-react";
 import { GmailTemplate, gmailSignatureTemplates } from './GmailTemplates';
+import GmailSignaturePreview from './GmailSignaturePreview';
 
 interface TemplateData {
   id: string;
@@ -456,36 +456,11 @@ const TemplateSelector = ({ isOpen, onClose, onSelect }: TemplateSelectorProps) 
             <ScrollArea className="h-[500px]">
               <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 p-2">
                 {gmailSignatureTemplates.map((template) => (
-                  <Card 
-                    key={template.id}
-                    className="cursor-pointer overflow-hidden transition-all duration-200 hover:shadow-md"
-                  >
-                    <div className="relative pb-[150%] overflow-hidden bg-muted">
-                      <div 
-                        className="absolute inset-0 hover:scale-105 transition-transform duration-200"
-                        style={{
-                          backgroundImage: `url(${template.thumbnail})`,
-                          backgroundSize: 'cover',
-                          backgroundPosition: 'center',
-                        }}
-                        onClick={() => handleTemplateSelect(template)}
-                      />
-                    </div>
-                    <CardContent className="p-3 flex justify-between items-center">
-                      <h3 className="font-medium">{template.name}</h3>
-                      <Button 
-                        variant="outline" 
-                        size="sm" 
-                        onClick={(e) => {
-                          e.stopPropagation();
-                          copyToClipboard(template.html);
-                        }}
-                      >
-                        <Copy className="w-4 h-4 mr-1" />
-                        Copy
-                      </Button>
-                    </CardContent>
-                  </Card>
+                  <GmailSignaturePreview 
+                    key={template.id} 
+                    template={template} 
+                    onSelect={handleTemplateSelect} 
+                  />
                 ))}
               </div>
             </ScrollArea>
