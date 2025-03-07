@@ -1,7 +1,9 @@
+
 import { useRef, useEffect, forwardRef, useImperativeHandle } from 'react';
 import { sanitizeHtml } from '../utils/exportUtils';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import html2canvas from 'html2canvas';
+import { expandImageReferences } from '../services/imageService';
 
 interface PreviewProps {
   htmlContent: string;
@@ -81,70 +83,76 @@ const Preview = forwardRef<PreviewRef, PreviewProps>(({
   }));
 
   useEffect(() => {
-    if (iframeRef.current) {
-      const iframe = iframeRef.current;
-      const document = iframe.contentDocument || iframe.contentWindow?.document;
-      
-      if (document) {
-        document.open();
+    const updateIframeContent = async () => {
+      if (iframeRef.current) {
+        const iframe = iframeRef.current;
+        const document = iframe.contentDocument || iframe.contentWindow?.document;
         
-        let styledHtml = sanitizeHtml(htmlContent);
-        
-        if (previewMode === 'print') {
-          const dimensions = getPaperDimensions(paperSize, orientation);
+        if (document) {
+          document.open();
           
-          const printStyles = `
-            <style>
-              @page {
-                size: ${paperSize} ${orientation};
-                margin: 0;
-              }
-              body {
-                margin: 0;
-                padding: 15mm; /* Print margin */
-                box-sizing: border-box;
-                width: ${dimensions.width}px;
-                height: ${dimensions.height}px;
-                position: relative;
-              }
-              ${showGuides ? `
-              /* Guides and markers */
-              body::before {
-                content: '';
-                position: absolute;
-                top: 0;
-                left: 0;
-                right: 0;
-                bottom: 0;
-                border: 1px dashed #aaa;
-                pointer-events: none;
-                z-index: 9999;
-              }
-              /* Grid lines */
-              body::after {
-                content: '';
-                position: absolute;
-                top: 15mm;
-                left: 15mm;
-                right: 15mm;
-                bottom: 15mm;
-                background-image: linear-gradient(#eee 1px, transparent 1px), 
-                                  linear-gradient(90deg, #eee 1px, transparent 1px);
-                background-size: 25mm 25mm;
-                pointer-events: none;
-                z-index: 9998;
-              }
-              ` : ''}
-            </style>
-          `;
+          // Expand image references before rendering
+          const expandedHtml = await expandImageReferences(htmlContent);
+          let styledHtml = sanitizeHtml(expandedHtml);
           
-          styledHtml = styledHtml.replace(/<head>/, `<head>${printStyles}`);
+          if (previewMode === 'print') {
+            const dimensions = getPaperDimensions(paperSize, orientation);
+            
+            const printStyles = `
+              <style>
+                @page {
+                  size: ${paperSize} ${orientation};
+                  margin: 0;
+                }
+                body {
+                  margin: 0;
+                  padding: 15mm; /* Print margin */
+                  box-sizing: border-box;
+                  width: ${dimensions.width}px;
+                  height: ${dimensions.height}px;
+                  position: relative;
+                }
+                ${showGuides ? `
+                /* Guides and markers */
+                body::before {
+                  content: '';
+                  position: absolute;
+                  top: 0;
+                  left: 0;
+                  right: 0;
+                  bottom: 0;
+                  border: 1px dashed #aaa;
+                  pointer-events: none;
+                  z-index: 9999;
+                }
+                /* Grid lines */
+                body::after {
+                  content: '';
+                  position: absolute;
+                  top: 15mm;
+                  left: 15mm;
+                  right: 15mm;
+                  bottom: 15mm;
+                  background-image: linear-gradient(#eee 1px, transparent 1px), 
+                                    linear-gradient(90deg, #eee 1px, transparent 1px);
+                  background-size: 25mm 25mm;
+                  pointer-events: none;
+                  z-index: 9998;
+                }
+                ` : ''}
+              </style>
+            `;
+            
+            styledHtml = styledHtml.replace(/<head>/, `<head>${printStyles}`);
+          }
+          
+          document.write(styledHtml);
+          document.close();
         }
-        
-        document.write(styledHtml);
-        document.close();
       }
-    }
+    };
+    
+    updateIframeContent();
   }, [htmlContent, previewMode, paperSize, orientation, showGuides]);
 
   const getPaperDimensions = (size: string, orient: string) => {

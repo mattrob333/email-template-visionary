@@ -160,3 +160,49 @@ export const processImageFile = (file: File): Promise<{
     reader.readAsDataURL(file);
   });
 };
+
+/**
+ * Generates a compact reference to an image using a specific pattern
+ * that can be detected and expanded later
+ */
+export const generateImageReference = (image: EmailImage): string => {
+  return `{{IMAGE:${image.id}}}`;
+};
+
+/**
+ * Replaces all image references in the HTML with the actual base64 data
+ */
+export const expandImageReferences = async (html: string): Promise<string> => {
+  // Find all image references in the format {{IMAGE:id}}
+  const regex = /\{\{IMAGE:([a-zA-Z0-9-]+)\}\}/g;
+  let result = html;
+  let match;
+
+  const promises: Promise<void>[] = [];
+  const replacements: { search: string; replace: string }[] = [];
+
+  while ((match = regex.exec(html)) !== null) {
+    const fullMatch = match[0];
+    const imageId = match[1];
+    
+    const promise = getImageById(imageId).then(image => {
+      if (image) {
+        replacements.push({
+          search: fullMatch,
+          replace: image.image_data
+        });
+      }
+    });
+    
+    promises.push(promise);
+  }
+
+  await Promise.all(promises);
+  
+  // Apply all replacements
+  replacements.forEach(({search, replace}) => {
+    result = result.replace(new RegExp(search.replace(/[.*+?^${}()|[\]\\]/g, '\\$&'), 'g'), replace);
+  });
+  
+  return result;
+};

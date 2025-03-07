@@ -103,11 +103,13 @@ const ImageManager = ({
       return;
     }
 
+    const selectedImage = uploadedImages.find(img => img.image_data === imageUrl);
+    
     const selectedOption = sizeOptions.find(option => option.id === selectedRatio);
     let styleAttr = '';
     let classAttr = '';
     const scale = imageScale[0] / 100;
-
+    
     if (selectedRatio === "original") {
       if (width || height) {
         styleAttr = `style="${width ? `width:${Math.round(parseInt(width) * scale)}px;` : ''}${height ? `height:${Math.round(parseInt(height) * scale)}px;` : ''}max-width:100%;"`;
@@ -124,27 +126,32 @@ const ImageManager = ({
     }
 
     let imageHtml = '';
+    let imageSource = imageUrl;
+    
+    if (selectedImage) {
+      imageSource = generateImageReference(selectedImage);
+    }
     
     if (position === "header") {
       imageHtml = `<!-- Header Image -->
 <div style="width:100%;text-align:center;margin-bottom:20px;">
-  <img src="${imageUrl}" alt="${altText}" ${styleAttr} ${classAttr} />
+  <img src="${imageSource}" alt="${altText}" ${styleAttr} ${classAttr} />
 </div>`;
     } else if (position === "footer") {
       imageHtml = `<!-- Footer Image -->
 <div style="width:100%;text-align:center;margin-top:20px;">
-  <img src="${imageUrl}" alt="${altText}" ${styleAttr} ${classAttr} />
+  <img src="${imageSource}" alt="${altText}" ${styleAttr} ${classAttr} />
 </div>`;
     } else {
       if (selectedRatio === "banner") {
         imageHtml = `<!-- Full Width Image -->
 <div style="width:100%;margin:15px 0;text-align:${alignment};">
-  <img src="${imageUrl}" alt="${altText}" style="width:100%;max-width:100%;height:auto;" />
+  <img src="${imageSource}" alt="${altText}" style="width:100%;max-width:100%;height:auto;" />
 </div>`;
       } else {
         imageHtml = `<!-- Inline Image -->
 <div style="margin:15px 0;text-align:${alignment};">
-  <img src="${imageUrl}" alt="${altText}" ${styleAttr} ${classAttr} />
+  <img src="${imageSource}" alt="${altText}" ${styleAttr} ${classAttr} />
 </div>`;
       }
     }
