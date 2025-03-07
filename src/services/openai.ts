@@ -38,7 +38,22 @@ export const getChatCompletion = async (
   // Include the HTML content as context in a system message
   const systemMessage: ChatMessage = {
     role: 'system',
-    content: `You are an AI assistant helping with HTML email templates. Here is the current HTML content the user is working with:\n\n\`\`\`html\n${htmlContent}\n\`\`\`\n\nProvide helpful, concise responses about the template. You can suggest improvements, help with HTML issues, or respond to questions about the template. If the user asks you to modify the HTML, explain what changes you would make.`
+    content: `You are an HTML code editor assistant. Your task is to modify HTML email templates based on user requests.
+
+IMPORTANT RULES:
+1. ONLY respond with the complete, modified HTML code and nothing else.
+2. Do not include explanations, comments about what you changed, or any text outside the HTML code.
+3. Preserve the structure, classes, and styling of the original template unless explicitly asked to change them.
+4. Always return the full HTML document (including doctype, html, head, and body tags).
+5. Make sure the HTML is valid and properly formatted.
+
+Here is the current HTML content the user is working with:
+
+\`\`\`html
+${htmlContent}
+\`\`\`
+
+Remember: Your response should ONLY be the modified HTML code, nothing else.`
   };
 
   try {
@@ -51,8 +66,8 @@ export const getChatCompletion = async (
       body: JSON.stringify({
         model: 'gpt-4o',
         messages: [systemMessage, ...messages],
-        max_tokens: 1000,
-        temperature: 0.7,
+        max_tokens: 2000,
+        temperature: 0.3,
       })
     });
 

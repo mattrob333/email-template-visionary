@@ -1,3 +1,4 @@
+
 import { useState, useRef, useEffect } from 'react';
 import { Send, Bot, User, RefreshCcw, Shield, Loader2 } from 'lucide-react';
 import { Button } from "@/components/ui/button";
@@ -23,7 +24,7 @@ const AIChat = ({ htmlContent, onUpdateHtml }: AIChatProps) => {
   const [messages, setMessages] = useState<Message[]>([
     {
       role: 'assistant',
-      content: 'Hello! I can help you write and edit your email template. You can ask me to modify your HTML or suggest improvements.',
+      content: 'I can help you modify your HTML email template. Tell me what changes you want to make.',
       timestamp: new Date()
     }
   ]);
@@ -76,16 +77,30 @@ const AIChat = ({ htmlContent, onUpdateHtml }: AIChatProps) => {
       const response = await getChatCompletion(apiMessages, htmlContent);
       
       if (response) {
-        const aiResponse: Message = {
-          role: 'assistant',
-          content: response,
-          timestamp: new Date()
-        };
-        
-        setMessages(prev => [...prev, aiResponse]);
+        // Check if the response is valid HTML
+        if (response.trim().startsWith('<!DOCTYPE') || response.trim().startsWith('<html') || response.trim().startsWith('<!') || response.trim().startsWith('<head')) {
+          // This looks like valid HTML - update the editor
+          onUpdateHtml(response);
+          
+          // Add a simplified response to the chat
+          const aiResponse: Message = {
+            role: 'assistant',
+            content: 'HTML updated according to your request.',
+            timestamp: new Date()
+          };
+          setMessages(prev => [...prev, aiResponse]);
+        } else {
+          // The response doesn't look like complete HTML
+          const aiResponse: Message = {
+            role: 'assistant',
+            content: 'I received a response, but it doesn\'t appear to be valid HTML. Please try rephrasing your request.',
+            timestamp: new Date()
+          };
+          setMessages(prev => [...prev, aiResponse]);
+        }
       }
     } catch (error) {
-      toast.error('Failed to get AI response');
+      toast.error('Failed to update HTML');
       console.error('AI response error:', error);
     } finally {
       setLoading(false);
@@ -102,7 +117,7 @@ const AIChat = ({ htmlContent, onUpdateHtml }: AIChatProps) => {
   const clearConversation = () => {
     setMessages([{
       role: 'assistant',
-      content: 'Conversation cleared. How can I help with your email template?',
+      content: 'Conversation cleared. How can I help modify your HTML email template?',
       timestamp: new Date()
     }]);
   };
@@ -112,7 +127,7 @@ const AIChat = ({ htmlContent, onUpdateHtml }: AIChatProps) => {
       <div className="p-2 border-b border-border/40 bg-black/10 flex justify-between items-center">
         <h2 className="text-sm font-semibold flex items-center">
           <Bot className="mr-2 h-4 w-4" />
-          AI Assistant
+          HTML Editor Assistant
         </h2>
         <Button 
           variant="ghost" 
@@ -179,7 +194,7 @@ const AIChat = ({ htmlContent, onUpdateHtml }: AIChatProps) => {
                 value={inputValue}
                 onChange={(e) => setInputValue(e.target.value)}
                 onKeyDown={handleKeyDown}
-                placeholder={hasOpenAIKey() ? "Ask about your email template..." : "Add OpenAI API key to start chatting..."}
+                placeholder={hasOpenAIKey() ? "Describe changes to make to the HTML..." : "Add OpenAI API key to start editing..."}
                 disabled={loading}
                 className="flex-1 h-8 text-sm"
               />
