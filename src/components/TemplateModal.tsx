@@ -131,9 +131,14 @@ export const TemplateModal = ({ isOpen, onClose, onSelect, currentHtml, previewR
     setTemplates(filteredTemplates);
   }, [storedTemplates, searchTerm, activeTab]);
 
-  const captureTemplateThumbnail = (): string => {
+  const captureTemplateThumbnail = async (): Promise<string> => {
     if (previewRef?.current) {
-      return previewRef.current.capturePreviewAsImage() || '';
+      try {
+        return await previewRef.current.capturePreviewAsImage() || '';
+      } catch (error) {
+        console.error('Error capturing thumbnail:', error);
+        return '';
+      }
     }
     return '';
   };
@@ -144,48 +149,60 @@ export const TemplateModal = ({ isOpen, onClose, onSelect, currentHtml, previewR
       return;
     }
 
-    const thumbnail = captureTemplateThumbnail();
+    try {
+      const thumbnail = await captureTemplateThumbnail();
 
-    if (editingTemplate) {
-      const updatedTemplate: Template = {
-        ...editingTemplate,
-        name: newTemplateName,
-        category: newTemplateCategory,
-        updatedAt: new Date().toISOString(),
-        thumbnail: thumbnail || editingTemplate.thumbnail
-      };
+      if (editingTemplate) {
+        const updatedTemplate: Template = {
+          ...editingTemplate,
+          name: newTemplateName,
+          category: newTemplateCategory,
+          updatedAt: new Date().toISOString(),
+          thumbnail: thumbnail || editingTemplate.thumbnail
+        };
 
-      const updatedTemplates = storedTemplates.map(template => 
-        template.id === editingTemplate.id ? updatedTemplate : template
-      );
-      setStoredTemplates(updatedTemplates);
-      
-      try {
-        const result = await updateTemplate(updatedTemplate);
-        if (result) {
-          toast.success('Template updated in cloud successfully');
-        } else {
+        const updatedTemplates = storedTemplates.map(template => 
+          template.id === editingTemplate.id ? updatedTemplate : template
+        );
+        setStoredTemplates(updatedTemplates);
+        
+        try {
+          const result = await updateTemplate(updatedTemplate);
+          if (result) {
+            toast.success('Template updated in cloud successfully');
+          } else {
+            toast.warning('Template updated locally only. Could not update in cloud.');
+          }
+        } catch (error) {
+          console.error('Error updating template in Supabase:', error);
           toast.warning('Template updated locally only. Could not update in cloud.');
         }
-      } catch (error) {
-        console.error('Error updating template in Supabase:', error);
-        toast.warning('Template updated locally only. Could not update in cloud.');
-      }
-    } else {
-      const templateToSave = {
-        name: newTemplateName,
-        html: currentHtml,
-        category: newTemplateCategory,
-        thumbnail: thumbnail
-      };
-      
-      try {
-        const savedTemplate = await saveTemplate(templateToSave);
+      } else {
+        const templateToSave = {
+          name: newTemplateName,
+          html: currentHtml,
+          category: newTemplateCategory,
+          thumbnail: thumbnail
+        };
         
-        if (savedTemplate) {
-          setStoredTemplates([...storedTemplates, savedTemplate]);
-          toast.success('Template saved to cloud successfully');
-        } else {
+        try {
+          const savedTemplate = await saveTemplate(templateToSave);
+          
+          if (savedTemplate) {
+            setStoredTemplates([...storedTemplates, savedTemplate]);
+            toast.success('Template saved to cloud successfully');
+          } else {
+            const localTemplate: Template = {
+              id: Date.now().toString(),
+              ...templateToSave,
+              createdAt: new Date().toISOString(),
+              updatedAt: new Date().toISOString()
+            };
+            setStoredTemplates([...storedTemplates, localTemplate]);
+            toast.warning('Template saved locally only. Could not save to cloud.');
+          }
+        } catch (error) {
+          console.error('Error saving template to Supabase:', error);
           const localTemplate: Template = {
             id: Date.now().toString(),
             ...templateToSave,
@@ -195,23 +212,16 @@ export const TemplateModal = ({ isOpen, onClose, onSelect, currentHtml, previewR
           setStoredTemplates([...storedTemplates, localTemplate]);
           toast.warning('Template saved locally only. Could not save to cloud.');
         }
-      } catch (error) {
-        console.error('Error saving template to Supabase:', error);
-        const localTemplate: Template = {
-          id: Date.now().toString(),
-          ...templateToSave,
-          createdAt: new Date().toISOString(),
-          updatedAt: new Date().toISOString()
-        };
-        setStoredTemplates([...storedTemplates, localTemplate]);
-        toast.warning('Template saved locally only. Could not save to cloud.');
       }
-    }
 
-    setNewTemplateName('');
-    setNewTemplateCategory('email');
-    setIsCreatingTemplate(false);
-    setEditingTemplate(null);
+      setNewTemplateName('');
+      setNewTemplateCategory('email');
+      setIsCreatingTemplate(false);
+      setEditingTemplate(null);
+    } catch (error) {
+      console.error('Error creating/updating template:', error);
+      toast.error('Failed to save template');
+    }
   };
 
   const handleDeleteTemplate = async (template: Template, event: React.MouseEvent) => {
@@ -345,7 +355,7 @@ export const TemplateModal = ({ isOpen, onClose, onSelect, currentHtml, previewR
                     size="sm" 
                     onClick={() => setIsCreatingTemplate(true)}
                   >
-                    <Plus className="h-4 w-4 mr-1" />
+                    <Plus className="h-4 w-4 mr-2" />
                     New Template
                   </Button>
                 </div>

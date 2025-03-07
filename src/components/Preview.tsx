@@ -1,6 +1,7 @@
 import { useRef, useEffect, forwardRef, useImperativeHandle } from 'react';
 import { sanitizeHtml } from '../utils/exportUtils';
 import { ScrollArea } from '@/components/ui/scroll-area';
+import html2canvas from 'html2canvas';
 
 interface PreviewProps {
   htmlContent: string;
@@ -12,7 +13,7 @@ interface PreviewProps {
 
 export interface PreviewRef {
   getIframeRef: () => React.RefObject<HTMLIFrameElement>;
-  capturePreviewAsImage: () => string | null;
+  capturePreviewAsImage: () => Promise<string | null>;
 }
 
 const Preview = forwardRef<PreviewRef, PreviewProps>(({
@@ -26,35 +27,26 @@ const Preview = forwardRef<PreviewRef, PreviewProps>(({
 
   useImperativeHandle(ref, () => ({
     getIframeRef: () => iframeRef,
-    capturePreviewAsImage: () => {
+    capturePreviewAsImage: async () => {
       try {
         if (!iframeRef.current) return null;
         
         const iframe = iframeRef.current;
         const iframeDocument = iframe.contentDocument || iframe.contentWindow?.document;
         
-        if (!iframeDocument) return null;
-
-        const canvas = document.createElement('canvas');
+        if (!iframeDocument || !iframeDocument.body) return null;
         
-        const scale = 0.3;
-        const width = iframe.offsetWidth * scale;
-        const height = iframe.offsetHeight * scale;
+        // Wait a bit to make sure content is fully rendered
+        await new Promise(resolve => setTimeout(resolve, 100));
         
-        canvas.width = width;
-        canvas.height = height;
-        
-        const ctx = canvas.getContext('2d');
-        if (!ctx) return null;
-        
-        ctx.fillStyle = '#FFFFFF';
-        ctx.fillRect(0, 0, width, height);
-        
-        const html = iframeDocument.documentElement.outerHTML;
-        
-        ctx.font = '10px Arial';
-        ctx.fillStyle = '#333333';
-        ctx.fillText('Template Preview', width / 2 - 40, height / 2);
+        // Use html2canvas to capture the iframe content
+        const canvas = await html2canvas(iframeDocument.body, {
+          scale: 0.3,
+          logging: false,
+          backgroundColor: '#FFFFFF',
+          allowTaint: true,
+          useCORS: true
+        });
         
         const dataUrl = canvas.toDataURL('image/png');
         console.log('Thumbnail generated successfully');

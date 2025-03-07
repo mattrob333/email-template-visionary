@@ -138,12 +138,22 @@ const Index = () => {
     }
   }, [isDarkMode]);
 
-  const handleSaveTemplate = () => {
+  const handleSaveTemplate = async () => {
     if (previewRef.current) {
-      const thumbnail = previewRef.current.capturePreviewAsImage() || '';
-      setTemplateThumbnail(thumbnail);
+      try {
+        const thumbnail = await previewRef.current.capturePreviewAsImage() || '';
+        setTemplateThumbnail(thumbnail);
+        setIsDialogOpen(true);
+      } catch (error) {
+        console.error('Error capturing thumbnail:', error);
+        toast.error('Failed to capture preview thumbnail');
+        setTemplateThumbnail('');
+        setIsDialogOpen(true);
+      }
+    } else {
+      setTemplateThumbnail('');
+      setIsDialogOpen(true);
     }
-    setIsDialogOpen(true);
   };
 
   const saveTemplate = async () => {
