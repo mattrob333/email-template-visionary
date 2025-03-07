@@ -41,7 +41,7 @@ export const sanitizeHtml = (html: string): string => {
 };
 
 /**
- * Copies the rendered HTML content for Gmail
+ * Copies the rendered HTML content for Gmail with proper formatting
  */
 export const copyRenderedContent = async (iframeRef: React.RefObject<HTMLIFrameElement>): Promise<boolean> => {
   try {
@@ -50,15 +50,59 @@ export const copyRenderedContent = async (iframeRef: React.RefObject<HTMLIFrameE
     const iframeDocument = iframeRef.current.contentDocument || iframeRef.current.contentWindow?.document;
     if (!iframeDocument) return false;
     
-    // Get the HTML content as a string
-    const htmlContent = iframeDocument.documentElement.outerHTML;
+    // Create a temporary textarea to hold the HTML content
+    const tempTextArea = document.createElement('textarea');
+    tempTextArea.style.position = 'fixed';
+    tempTextArea.style.left = '-9999px';
+    tempTextArea.style.top = '-9999px';
+    document.body.appendChild(tempTextArea);
     
-    // Use writeText instead of ClipboardItem for better compatibility
-    await navigator.clipboard.writeText(htmlContent);
+    // For Gmail, we need to use the clipboard API with HTML format
+    const formattedContent = iframeDocument.documentElement.innerHTML;
+    
+    // Create a Clipboard item with HTML format
+    const clipboardItem = new ClipboardItem({
+      'text/html': new Blob([formattedContent], { type: 'text/html' }),
+      'text/plain': new Blob([formattedContent], { type: 'text/plain' })
+    });
+    
+    // Use the Clipboard API to write with HTML format preserved
+    await navigator.clipboard.write([clipboardItem]);
+    
+    // Clean up temporary element
+    document.body.removeChild(tempTextArea);
+    
     return true;
   } catch (err) {
     console.error('Failed to copy rendered content: ', err);
-    return false;
+    
+    // Fallback for browsers that don't support clipboard.write()
+    try {
+      if (!iframeRef.current) return false;
+      
+      const iframeDocument = iframeRef.current.contentDocument || iframeRef.current.contentWindow?.document;
+      if (!iframeDocument) return false;
+      
+      // Select all content in the iframe
+      const range = iframeDocument.createRange();
+      range.selectNodeContents(iframeDocument.body);
+      
+      const selection = window.getSelection();
+      if (selection) {
+        selection.removeAllRanges();
+        selection.addRange(range);
+        
+        // Execute copy command
+        const successful = document.execCommand('copy');
+        selection.removeAllRanges();
+        
+        return successful;
+      }
+      return false;
+    } catch (fallbackErr) {
+      console.error('Fallback copy method failed: ', fallbackErr);
+      return false;
+    }
   }
 };
 

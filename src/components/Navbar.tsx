@@ -1,6 +1,6 @@
 
 import { useState } from 'react';
-import { Moon, Sun, Save, FileCode, Image, FileText, Menu, Copy, Mail } from 'lucide-react';
+import { Moon, Sun, Save, FileCode, Image, FileText, Menu, Copy } from 'lucide-react';
 import { Button } from "@/components/ui/button";
 import { TemplateModal } from './TemplateModal';
 import TemplateSelector from './TemplateSelector';
@@ -63,7 +63,7 @@ const Navbar = ({
       const success = await copyRenderedContent(previewRef.current.getIframeRef());
       
       if (success) {
-        toast.success('Content copied to clipboard. Ready to paste into Gmail!');
+        toast.success('Formatted content copied to clipboard. Ready to paste into Gmail!');
       } else {
         toast.error('Failed to copy content');
       }
