@@ -178,6 +178,7 @@ export const generateImageReference = (image: EmailImage): string => {
 
 /**
  * Replaces all image references in the HTML with the actual base64 data
+ * Ensures content has proper contrast for Gmail compatibility
  */
 export const expandImageReferences = async (html: string): Promise<string> => {
   // Find all image references in the format {{IMAGE:id}}
@@ -194,10 +195,10 @@ export const expandImageReferences = async (html: string): Promise<string> => {
     
     const promise = getImageById(imageId).then(image => {
       if (image) {
-        // Instead of just replacing with the base64 data, replace with a proper img tag
+        // Replace with proper img tag
         replacements.push({
           search: fullMatch,
-          replace: image.image_data
+          replace: generateImgTag(image)
         });
       }
     });
@@ -211,6 +212,22 @@ export const expandImageReferences = async (html: string): Promise<string> => {
   replacements.forEach(({search, replace}) => {
     result = result.replace(new RegExp(search.replace(/[.*+?^${}()|[\]\\]/g, '\\$&'), 'g'), replace);
   });
+  
+  // Make sure the content is readable in Gmail by modifying dark background styles
+  // Improve text contrast for Gmail compatibility
+  result = result
+    // Change dark backgrounds to light colors
+    .replace(/background-color:\s*#121212/g, 'background-color: #ffffff')
+    .replace(/background-color:\s*#1e1e1e/g, 'background-color: #f8f9fa')
+    .replace(/background-color:\s*#2a2a2a/g, 'background-color: #f1f1f1')
+    // Change light text on dark backgrounds to dark text
+    .replace(/color:\s*#e0e0e0/g, 'color: #333333')
+    .replace(/color:\s*#ffffff/g, 'color: #222222')
+    .replace(/color:\s*#9ca3af/g, 'color: #666666')
+    // Fix button text color for contrast
+    .replace(/(background-color:\s*#0beba2.*?color:\s*)#121212/g, '$1#000000')
+    // Fix specific color combinations used in templates
+    .replace(/color:\s*#6c757d/g, 'color: #595959');
   
   return result;
 };
