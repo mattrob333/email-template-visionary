@@ -10,6 +10,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter, DialogD
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { exportAsPdf } from '../utils/exportUtils';
 import { saveTemplate as saveTemplateToSupabase } from '../services/templateService';
 
@@ -104,6 +105,8 @@ const Index = () => {
   const [isDarkMode, setIsDarkMode] = useState(false);
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const [templateName, setTemplateName] = useState('');
+  const [templateCategory, setTemplateCategory] = useState('email');
+  const [templateThumbnail, setTemplateThumbnail] = useState('');
   const [templates, setTemplates] = useLocalStorage<Template[]>('email-templates', []);
   const [editorWidth, setEditorWidth] = useState(50); // percentage
   const [previewMode, setPreviewMode] = useState<'email' | 'print'>('email');
@@ -136,6 +139,10 @@ const Index = () => {
   }, [isDarkMode]);
 
   const handleSaveTemplate = () => {
+    if (previewRef.current) {
+      const thumbnail = previewRef.current.capturePreviewAsImage() || '';
+      setTemplateThumbnail(thumbnail);
+    }
     setIsDialogOpen(true);
   };
 
@@ -145,34 +152,27 @@ const Index = () => {
       return;
     }
 
-    let thumbnail = '';
-    if (previewRef.current) {
-      thumbnail = previewRef.current.capturePreviewAsImage() || '';
-    }
-
-    const newTemplate: Template = {
-      id: Date.now().toString(),
+    const newTemplate: Omit<Template, 'id' | 'createdAt' | 'updatedAt'> = {
       name: templateName,
       html: htmlContent,
-      category: 'email',
-      createdAt: new Date().toISOString(),
-      updatedAt: new Date().toISOString(),
-      thumbnail: thumbnail,
+      category: templateCategory,
+      thumbnail: templateThumbnail,
     };
-
-    setTemplates([...templates, newTemplate]);
     
     try {
-      const savedTemplate = await saveTemplateToSupabase({
-        name: templateName,
-        html: htmlContent,
-        category: 'email',
-        thumbnail: thumbnail
-      });
+      const savedTemplate = await saveTemplateToSupabase(newTemplate);
       
       if (savedTemplate) {
+        setTemplates([...templates, savedTemplate]);
         toast.success('Template saved to cloud successfully!');
       } else {
+        const localTemplate: Template = {
+          id: Date.now().toString(),
+          ...newTemplate,
+          createdAt: new Date().toISOString(),
+          updatedAt: new Date().toISOString(),
+        };
+        setTemplates([...templates, localTemplate]);
         toast.warning('Template saved locally only. Could not save to cloud.');
       }
     } catch (error) {
@@ -182,6 +182,8 @@ const Index = () => {
     
     setIsDialogOpen(false);
     setTemplateName('');
+    setTemplateCategory('email');
+    setTemplateThumbnail('');
   };
 
   const loadTemplate = (template: Template) => {
@@ -328,27 +330,59 @@ const Index = () => {
       </main>
       
       <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
-        <DialogContent className="sm:max-w-[425px] animate-fade-in">
+        <DialogContent className="sm:max-w-[600px] animate-fade-in">
           <DialogHeader>
-            <DialogTitle>Save Email Template</DialogTitle>
-            <DialogDescription>Enter a name for your template to save it for later use.</DialogDescription>
+            <DialogTitle>Save Template</DialogTitle>
+            <DialogDescription>Enter a name and select a category for your template.</DialogDescription>
           </DialogHeader>
-          <div className="grid gap-4 py-4">
-            <div className="grid gap-2">
-              <Label htmlFor="name">Template Name</Label>
-              <Input
-                id="name"
-                value={templateName}
-                onChange={(e) => setTemplateName(e.target.value)}
-                placeholder="Enter a name for your template"
-                className="col-span-3"
-                autoFocus
-              />
+          
+          <div className="grid gap-6 py-4">
+            <div className="preview-container border rounded-md p-4 bg-gray-50 dark:bg-gray-800 overflow-hidden" style={{ height: "200px" }}>
+              {templateThumbnail ? (
+                <img 
+                  src={templateThumbnail} 
+                  alt="Template Preview" 
+                  className="w-full h-full object-contain"
+                />
+              ) : (
+                <div className="flex items-center justify-center h-full text-muted-foreground">
+                  Preview not available
+                </div>
+              )}
+            </div>
+            
+            <div className="grid gap-4">
+              <div className="grid gap-2">
+                <Label htmlFor="template-name">Template Name</Label>
+                <Input
+                  id="template-name"
+                  value={templateName}
+                  onChange={(e) => setTemplateName(e.target.value)}
+                  placeholder="Enter a name for your template"
+                  className="col-span-3"
+                  autoFocus
+                />
+              </div>
+              
+              <div className="grid gap-2">
+                <Label htmlFor="template-category">Category</Label>
+                <Select value={templateCategory} onValueChange={setTemplateCategory}>
+                  <SelectTrigger id="template-category">
+                    <SelectValue placeholder="Select a category" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="email">Email</SelectItem>
+                    <SelectItem value="print">Print Document</SelectItem>
+                    <SelectItem value="gmail">Gmail Signature</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
             </div>
           </div>
+          
           <DialogFooter>
             <Button variant="outline" onClick={() => setIsDialogOpen(false)}>Cancel</Button>
-            <Button onClick={saveTemplate}>Save</Button>
+            <Button onClick={saveTemplate}>Save Template</Button>
           </DialogFooter>
         </DialogContent>
       </Dialog>
