@@ -162,6 +162,13 @@ export const processImageFile = (file: File): Promise<{
 };
 
 /**
+ * Generates an HTML img tag with embedded base64 data
+ */
+export const generateImgTag = (image: EmailImage): string => {
+  return `<img src="${image.image_data}" alt="${image.name}" ${image.width ? `width="${image.width}"` : ''} ${image.height ? `height="${image.height}"` : ''} style="max-width:100%;height:auto;" />`;
+};
+
+/**
  * Generates a compact reference to an image using a specific pattern
  * that can be detected and expanded later
  */
@@ -187,6 +194,7 @@ export const expandImageReferences = async (html: string): Promise<string> => {
     
     const promise = getImageById(imageId).then(image => {
       if (image) {
+        // Instead of just replacing with the base64 data, replace with a proper img tag
         replacements.push({
           search: fullMatch,
           replace: image.image_data

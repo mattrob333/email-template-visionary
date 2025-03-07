@@ -132,10 +132,12 @@ const ImageManager = ({
     }
 
     let imageHtml = '';
-    let imageSource = imageUrl;
+    let imageSource = '';
     
     if (selectedImage) {
       imageSource = generateImageReference(selectedImage);
+    } else {
+      imageSource = imageUrl;
     }
     
     if (position === "header") {
@@ -240,10 +242,11 @@ const ImageManager = ({
   };
 
   const copyImageReference = (image: EmailImage) => {
-    const reference = generateImageReference(image);
-    navigator.clipboard.writeText(reference)
+    const imgTag = `<img src="${generateImageReference(image)}" alt="${image.name}" style="max-width:100%;height:auto;" />`;
+    
+    navigator.clipboard.writeText(imgTag)
       .then(() => {
-        toast.success(`Image reference copied: ${reference}`);
+        toast.success('Image tag copied to clipboard');
       })
       .catch(err => {
         console.error('Failed to copy:', err);
