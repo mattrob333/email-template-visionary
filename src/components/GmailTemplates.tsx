@@ -1,4 +1,3 @@
-
 import React from 'react';
 
 export interface GmailTemplate {
@@ -166,7 +165,7 @@ export const gmailSignatureTemplates: GmailTemplate[] = [
   </div>
 </body>
 </html>`,
-    thumbnail: "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='200' height='300' viewBox='0 0 200 300'%3E%3Crect width='200' height='300' fill='%23ffffff'/%3E%3Ccircle cx='50' cy='80' r='30' fill='%23e0e0e0'/%3E%3Ctext x='100' y='70' font-family='Arial' font-size='12' font-weight='bold' fill='%232c3e50'%3ESarah Johnson%3C/text%3E%3Ctext x='100' y='90' font-family='Arial' font-size='10' fill='%237f8c8d'%3EUX Designer%3C/text%3E%3Crect x='100' y='100' width='80' height='3' rx='1' fill='%233498db'/%3E%3Ccircle cx='100' cy='120' r='5' fill='%233498db'/%3E%3Ccircle cx='115' cy='120' r='5' fill='%23ea4c89'/%3E%3Ccircle cx='130' cy='120' r='5' fill='%231769ff'/%3E%3C/svg%3E"
+    thumbnail: "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='200' height='300' viewBox='0 0 200 300'%3E%3Crect width='200' height='300' fill='%23ffffff'/%3E%3Ccircle cx='50' cy='80' r='30' fill='%23e0e0e0'/%3E%3Ctext x='100' y='70' font-family='Arial' font-size='12' font-weight='bold' fill='%232c3e50'%3ESarah Johnson%3C/text%3E%3Ctext x='100' y='90' font-family='Arial' font-size='10' fill='%237f8c8d'%3EUX Designer%3C/text%3E%3Cline x1='20' y1='100' x2='180' y2='100' stroke='%23e0e0e0' stroke-width='1'/%3E%3Ccircle cx='100' cy='120' r='5' fill='%233498db'/%3E%3Ccircle cx='115' cy='120' r='5' fill='%23ea4c89'/%3E%3Ccircle cx='130' cy='120' r='5' fill='%231769ff'/%3E%3C/svg%3E"
   },
   {
     id: "gmail-3",
@@ -340,7 +339,7 @@ export const gmailSignatureTemplates: GmailTemplate[] = [
   </div>
 </body>
 </html>`,
-    thumbnail: "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='200' height='300' viewBox='0 0 200 300'%3E%3Crect width='200' height='300' fill='%23f9f9f9'/%3E%3Crect x='20' y='40' width='4' height='200' fill='%239b59b6'/%3E%3Ctext x='35' y='70' font-family='Trebuchet MS' font-size='14' font-weight='bold' fill='%239b59b6'%3EAlex Rivera%3C/text%3E%3Ctext x='35' y='90' font-family='Trebuchet MS' font-size='10' fill='%238e44ad'%3ECreative Director%3C/text%3E%3Ccircle cx='35' cy='110' r='5' fill='%239b59b6'/%3E%3Ccircle cx='50' cy='110' r='5' fill='%239b59b6'/%3E%3Ccircle cx='65' cy='110' r='5' fill='%239b59b6'/%3E%3Cline x1='35' y1='130' x2='165' y2='130' stroke='%23e0e0e0' stroke-width='1' stroke-dasharray='3'/%3E%3Ctext x='35' y='150' font-family='Trebuchet MS' font-size='8' font-style='italic' fill='%237f8c8d'%3E"Creativity takes courage." - Henri Matisse%3C/text%3E%3C/svg%3E"
+    thumbnail: "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='200' height='300' viewBox='0 0 200 300'%3E%3Crect width='200' height='300' fill='%23f9f9f9'/%3E%3Crect x='20' y='40' width='4' height='200' fill='%239b59b6'/%3E%3Ctext x='35' y='70' font-family='Trebuchet MS' font-size='14' font-weight='bold' fill='%239b59b6'%3EAlex Rivera%3C/text%3E%3Ctext x='35' y='90' font-family='Trebuchet MS' font-size='10' fill='%238e44ad'%3ECreative Director%3C/text%3E%3Ccircle cx='35' cy='110' r='5' fill='%239b59b6'/%3E%3Ccircle cx='50' cy='110' r='5' fill='%239b59b6'/%3E%3Ccircle cx='65' cy='110' r='5' fill='%239b59b6'/%3E%3Cline x1='35' y1='130' x2='165' y2='130' stroke='%23e0e0e0' stroke-width='1' stroke-dasharray='3'/%3E%3Ctext x='35' y='150' font-family='Trebuchet MS' font-size='8' font-style='italic' fill='%237f8c8d'%3E%26quot;Creativity takes courage.%26quot; - Henri Matisse%3C/text%3E%3C/svg%3E"
   },
   {
     id: "gmail-5",
