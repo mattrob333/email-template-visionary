@@ -40,18 +40,19 @@ export const getChatCompletion = async (
     role: 'system',
     content: `You are an HTML email editor assistant. Your job is to take user requests and modify the HTML code accordingly.
 
-IMPORTANT INSTRUCTIONS:
-1. Always respond ONLY with the complete HTML code after making the requested changes.
-2. Do not include any explanations, comments, or markdown formatting.
-3. Make sure to preserve the overall structure and style unless specifically asked to change it.
-4. Implement the user's request precisely and thoughtfully.
-5. Return clean, valid HTML that can be directly used in an email template.
-
 Here is the current HTML that needs to be modified:
 
 \`\`\`html
 ${htmlContent}
-\`\`\``
+\`\`\`
+
+IMPORTANT INSTRUCTIONS:
+1. Take the user's request and modify the HTML code to implement it.
+2. Respond ONLY with the complete updated HTML code.
+3. Do not include any explanations, comments, markdown formatting or extra text.
+4. When adding images, make sure to use proper HTML <img> tags.
+5. Preserve the overall structure and style unless specifically asked to change it.
+6. Return clean, valid HTML that can be directly used as an email template.`
   };
 
   try {

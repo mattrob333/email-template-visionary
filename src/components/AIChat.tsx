@@ -1,12 +1,13 @@
 
 import { useState, useRef, useEffect } from 'react';
-import { Send, Bot, User, RefreshCcw, Shield, Loader2, Code, GripVertical } from 'lucide-react';
+import { Send, Bot, User, RefreshCcw, Shield, Loader2, Code, GripVertical, ImagePlus } from 'lucide-react';
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { toast } from 'sonner';
 import { ChatMessage, getChatCompletion, hasOpenAIKey } from '../services/openai';
 import OpenAIKeyDialog from './OpenAIKeyDialog';
+import ImageManager from './ImageManager';
 
 interface AIChatProps {
   htmlContent: string;
@@ -32,6 +33,7 @@ const AIChat = ({ htmlContent, onUpdateHtml }: AIChatProps) => {
   const [isKeyDialogOpen, setIsKeyDialogOpen] = useState(false);
   const [showVariables, setShowVariables] = useState(false);
   const [chatHeight, setChatHeight] = useState(250);
+  const [isImageManagerOpen, setIsImageManagerOpen] = useState(false);
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLInputElement>(null);
   const resizerRef = useRef<HTMLDivElement>(null);
@@ -153,6 +155,20 @@ const AIChat = ({ htmlContent, onUpdateHtml }: AIChatProps) => {
     }]);
   };
 
+  const handleInsertImage = (imageHtml: string) => {
+    // Directly update the HTML with the new image
+    onUpdateHtml(htmlContent + "\n" + imageHtml);
+    
+    // Add system message about the image insertion
+    const imageInsertedMessage: Message = {
+      role: 'system',
+      content: 'Image has been added to the template. You can now ask the AI to position or style it.',
+      timestamp: new Date()
+    };
+    
+    setMessages(prev => [...prev, imageInsertedMessage]);
+  };
+
   return (
     <div className="flex flex-col h-full">
       <div 
@@ -207,12 +223,16 @@ const AIChat = ({ htmlContent, onUpdateHtml }: AIChatProps) => {
                     className={`max-w-[85%] px-2 py-1 rounded-lg text-xs ${
                       message.role === 'user' 
                         ? 'bg-primary/10 text-primary-foreground/90 rounded-tr-none' 
+                        : message.role === 'system'
+                        ? 'bg-secondary/20 rounded-tl-none' 
                         : 'bg-muted rounded-tl-none'
                     }`}
                   >
                     <div className="flex items-center gap-1 mb-1 text-xs opacity-70">
                       {message.role === 'user' ? 
                         <><span>You</span><User className="h-3 w-3" /></> : 
+                        message.role === 'system' ?
+                        <><Shield className="h-3 w-3" /><span>System</span></> :
                         <><Bot className="h-3 w-3" /><span>Assistant</span></>
                       }
                     </div>
@@ -237,6 +257,15 @@ const AIChat = ({ htmlContent, onUpdateHtml }: AIChatProps) => {
                 className="h-8 w-8"
               >
                 <RefreshCcw className="h-3 w-3" />
+              </Button>
+              <Button
+                variant="outline"
+                size="icon"
+                onClick={() => setIsImageManagerOpen(true)}
+                title="Insert image"
+                className="h-8 w-8"
+              >
+                <ImagePlus className="h-3 w-3" />
               </Button>
               <Input
                 ref={inputRef}
@@ -267,6 +296,12 @@ const AIChat = ({ htmlContent, onUpdateHtml }: AIChatProps) => {
       <OpenAIKeyDialog 
         open={isKeyDialogOpen} 
         onOpenChange={setIsKeyDialogOpen} 
+      />
+      
+      <ImageManager
+        isOpen={isImageManagerOpen}
+        onClose={() => setIsImageManagerOpen(false)}
+        onInsert={handleInsertImage}
       />
     </div>
   );
