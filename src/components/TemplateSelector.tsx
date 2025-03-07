@@ -1,30 +1,28 @@
-
-import { useState } from 'react';
+import React, { useState } from 'react';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { ScrollArea } from "@/components/ui/scroll-area";
-import { Template } from './TemplateModal';
-import { LayoutGrid, Mail, Printer, AtSign } from 'lucide-react';
+import { Card, CardContent } from "@/components/ui/card";
+import { GmailTemplate, gmailSignatureTemplates } from './GmailTemplates';
 
-interface TemplateSelectorProps {
-  isOpen: boolean;
-  onClose: () => void;
-  onSelect: (template: string) => void;
+interface TemplateData {
+  id: string;
+  name: string;
+  html: string;
+  category: string;
+  thumbnail: string;
 }
 
-// Define template categories and default templates
-const EMAIL_TEMPLATES = [
+const emailTemplates: TemplateData[] = [
   {
-    id: 'email-newsletter',
-    name: 'Newsletter',
-    description: 'Clean newsletter layout with header, content sections, and footer',
-    previewSrc: '/template-email-newsletter.png',
+    id: "email-1",
+    name: "Simple Newsletter",
     html: `<!DOCTYPE html>
 <html>
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Email Newsletter</title>
+  <title>Email Template</title>
   <style>
     body {
       font-family: Arial, sans-serif;
@@ -68,13 +66,14 @@ const EMAIL_TEMPLATES = [
 <body>
   <div class="container">
     <div class="header">
-      <h1>Newsletter Title</h1>
+      <h1>Welcome to Our Newsletter</h1>
     </div>
     <div class="content">
       <h2>Hello there!</h2>
       <p>Thank you for subscribing to our newsletter. We're excited to share the latest updates with you.</p>
       <p>Here are some highlights from this week:</p>
       <ul>
+        <li>New product launch coming soon</li>
         <li>New product launch coming soon</li>
         <li>Exclusive discounts for subscribers</li>
         <li>Tips and tricks from our experts</li>
@@ -89,19 +88,19 @@ const EMAIL_TEMPLATES = [
     </div>
   </div>
 </body>
-</html>`
+</html>`,
+    category: "email",
+    thumbnail: "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='200' height='300' viewBox='0 0 200 300'%3E%3Crect width='200' height='300' fill='%23ffffff'/%3E%3Crect x='20' y='20' width='160' height='40' fill='%23f8f9fa'/%3E%3Ctext x='100' y='45' font-family='Arial' font-size='12' text-anchor='middle' fill='%23333333'%3ENewsletter Header%3C/text%3E%3Crect x='20' y='60' width='160' height='180' fill='%23ffffff'/%3E%3Ctext x='30' y='80' font-family='Arial' font-size='10' fill='%23333333'%3EHello there!%3C/text%3E%3Cline x1='30' y1='90' x2='170' y2='90' stroke='%23eeeeee' stroke-width='1'/%3E%3Crect x='30' y='100' width='140' height='2' fill='%23eeeeee'/%3E%3Crect x='30' y='110' width='140' height='2' fill='%23eeeeee'/%3E%3Crect x='30' y='120' width='140' height='2' fill='%23eeeeee'/%3E%3Crect x='30' y='140' width='5' height='5' fill='%23333333'/%3E%3Crect x='30' y='155' width='5' height='5' fill='%23333333'/%3E%3Crect x='30' y='170' width='5' height='5' fill='%23333333'/%3E%3Crect x='30' y='200' width='70' height='20' rx='4' fill='%23007bff'/%3E%3Ctext x='65' y='214' font-family='Arial' font-size='10' text-anchor='middle' fill='%23ffffff'%3ELearn More%3C/text%3E%3Crect x='20' y='240' width='160' height='40' fill='%23f8f9fa'/%3E%3Ctext x='100' y='265' font-family='Arial' font-size='8' text-anchor='middle' fill='%236c757d'%3E© 2023 Your Company%3C/text%3E%3C/svg%3E"
   },
   {
-    id: 'email-announcement',
-    name: 'Announcement',
-    description: 'Bold announcement layout for product launches or events',
-    previewSrc: '/template-email-announcement.png',
+    id: "email-2",
+    name: "Product Announcement",
     html: `<!DOCTYPE html>
 <html>
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Announcement Email</title>
+  <title>Product Announcement Email</title>
   <style>
     body {
       font-family: Arial, sans-serif;
@@ -113,985 +112,358 @@ const EMAIL_TEMPLATES = [
     .container {
       max-width: 600px;
       margin: 0 auto;
+      padding: 20px;
     }
     .header {
-      background-color: #4a148c;
-      color: white;
-      padding: 30px 20px;
-      text-align: center;
-    }
-    .header h1 {
-      margin: 0;
-      font-size: 28px;
-      text-transform: uppercase;
-      letter-spacing: 1px;
-    }
-    .subheader {
-      background-color: #7b1fa2;
-      color: white;
-      padding: 10px;
-      text-align: center;
-      font-size: 18px;
-    }
-    .content {
-      padding: 30px 20px;
-      background-color: #ffffff;
-    }
-    .cta-button {
-      display: block;
-      background-color: #e91e63;
-      color: white;
-      text-decoration: none;
-      padding: 15px 20px;
-      margin: 30px auto;
-      text-align: center;
-      border-radius: 4px;
-      font-weight: bold;
-      width: 200px;
-      text-transform: uppercase;
-    }
-    .footer {
-      background-color: #f5f5f5;
+      background-color: #f8f9fa;
       padding: 20px;
       text-align: center;
-      font-size: 12px;
-      color: #666;
-    }
-  </style>
-</head>
-<body>
-  <div class="container">
-    <div class="header">
-      <h1>Big Announcement!</h1>
-    </div>
-    <div class="subheader">
-      We're excited to share some amazing news
-    </div>
-    <div class="content">
-      <h2>Introducing Our New Product</h2>
-      <p>We are thrilled to announce the launch of our latest product that will revolutionize the way you work.</p>
-      <p>After months of development and testing, it's finally here and ready for you to experience!</p>
-      <p>Key features include:</p>
-      <ul>
-        <li>Innovative design for maximum efficiency</li>
-        <li>Cutting-edge technology integration</li>
-        <li>Seamless user experience</li>
-        <li>Powerful performance capabilities</li>
-      </ul>
-      <a href="#" class="cta-button">Learn More</a>
-      <p>The official launch is on <strong>October 15th</strong>, but as a valued customer, you get early access!</p>
-    </div>
-    <div class="footer">
-      <p>© 2023 Your Company. All rights reserved.</p>
-      <p><a href="#">Unsubscribe</a> | <a href="#">Privacy Policy</a></p>
-    </div>
-  </div>
-</body>
-</html>`
-  },
-  {
-    id: 'email-promotional',
-    name: 'Promotional',
-    description: 'Effective promotional email design with clear call-to-action',
-    previewSrc: '/template-email-promotional.png',
-    html: `<!DOCTYPE html>
-<html>
-<head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Promotional Email</title>
-  <style>
-    body {
-      font-family: Arial, sans-serif;
-      line-height: 1.6;
-      color: #333;
-      margin: 0;
-      padding: 0;
-      background-color: #f9f9f9;
-    }
-    .container {
-      max-width: 600px;
-      margin: 0 auto;
-      background-color: #ffffff;
-    }
-    .header {
-      background-color: #ff6b6b;
-      padding: 20px;
-      text-align: center;
-    }
-    .logo {
-      max-width: 150px;
-    }
-    .hero {
-      position: relative;
-      text-align: center;
-    }
-    .hero-image {
-      width: 100%;
-      max-width: 600px;
-      height: auto;
-    }
-    .hero-content {
-      position: absolute;
-      top: 50%;
-      left: 50%;
-      transform: translate(-50%, -50%);
-      background-color: rgba(255, 255, 255, 0.9);
-      padding: 20px;
-      border-radius: 5px;
-      width: 80%;
+      border-bottom: 1px solid #dee2e6;
     }
     .content {
       padding: 20px;
-    }
-    .offer {
-      background-color: #ffe066;
-      padding: 15px;
-      text-align: center;
-      margin: 20px 0;
-      border-radius: 5px;
-    }
-    .cta-button {
-      display: inline-block;
-      background-color: #ff6b6b;
-      color: white;
-      text-decoration: none;
-      padding: 15px 25px;
-      border-radius: 4px;
-      font-weight: bold;
-    }
-    .footer {
-      background-color: #333;
-      color: white;
-      padding: 20px;
-      text-align: center;
-      font-size: 12px;
-    }
-    .footer a {
-      color: #ffe066;
-    }
-  </style>
-</head>
-<body>
-  <div class="container">
-    <div class="header">
-      <img src="https://via.placeholder.com/150x50" alt="Company Logo" class="logo">
-    </div>
-    <div class="hero">
-      <img src="https://via.placeholder.com/600x300" alt="Promotional Banner" class="hero-image">
-      <div class="hero-content">
-        <h1>Special Offer!</h1>
-        <p>Limited time promotion just for you</p>
-      </div>
-    </div>
-    <div class="content">
-      <h2>Exclusive Summer Sale</h2>
-      <p>Dear Valued Customer,</p>
-      <p>Summer is here, and we're celebrating with our biggest sale of the season!</p>
-      <div class="offer">
-        <h2>Get 30% OFF</h2>
-        <p>Use code: <strong>SUMMER30</strong> at checkout</p>
-      </div>
-      <p>Browse our collection of summer essentials and refresh your wardrobe with the latest trends. This offer is only available until June 30th.</p>
-      <p style="text-align: center; margin: 30px 0;">
-        <a href="#" class="cta-button">Shop Now</a>
-      </p>
-    </div>
-    <div class="footer">
-      <p>© 2023 Your Company. All rights reserved.</p>
-      <p><a href="#">Unsubscribe</a> | <a href="#">View Online</a> | <a href="#">Privacy Policy</a></p>
-    </div>
-  </div>
-</body>
-</html>`
-  }
-];
-
-const PRINT_TEMPLATES = [
-  {
-    id: 'flyer-event',
-    name: 'Event Flyer',
-    description: 'Perfect for promoting upcoming events and gatherings',
-    previewSrc: '/template-print-event.png',
-    html: `<!DOCTYPE html>
-<html>
-<head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Event Flyer</title>
-  <style>
-    body {
-      font-family: 'Arial', sans-serif;
-      margin: 0;
-      padding: 0;
-      box-sizing: border-box;
-      color: #333;
-      /* Print-specific settings */
-      width: 8.5in;
-      height: 11in;
-    }
-    .flyer {
-      width: 100%;
-      height: 100%;
-      position: relative;
-      overflow: hidden;
-      background-color: #f0f4ff;
-    }
-    .header {
-      background-color: #3b82f6;
-      color: white;
-      padding: 40px 20px;
-      text-align: center;
-    }
-    .title {
-      font-size: 48px;
-      margin: 0;
-      text-transform: uppercase;
-      letter-spacing: 2px;
-    }
-    .subtitle {
-      font-size: 24px;
-      margin-top: 10px;
-      font-weight: normal;
-    }
-    .content {
-      padding: 40px;
-      text-align: center;
-    }
-    .date-time {
-      background-color: #dbeafe;
-      padding: 20px;
-      margin: 30px auto;
-      max-width: 80%;
-      border-radius: 8px;
-      box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
-    }
-    .date-time h2 {
-      margin-top: 0;
-      color: #1e40af;
-    }
-    .details {
-      margin: 40px 0;
-      font-size: 18px;
-      line-height: 1.6;
-    }
-    .cta {
-      background-color: #3b82f6;
-      color: white;
-      font-size: 24px;
-      padding: 15px 30px;
-      border-radius: 50px;
-      display: inline-block;
-      margin: 20px 0;
-      text-decoration: none;
-      box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
-    }
-    .footer {
-      background-color: #1e40af;
-      color: white;
-      padding: 30px;
-      text-align: center;
-      position: absolute;
-      bottom: 0;
-      width: 100%;
-      box-sizing: border-box;
-    }
-    .contact {
-      margin-top: 20px;
-    }
-    .qr-code {
-      background-color: white;
-      padding: 10px;
-      display: inline-block;
-      margin-top: 20px;
-    }
-    .tear-off {
-      border-top: 1px dashed #999;
-      margin-top: 30px;
-      padding-top: 20px;
-      display: flex;
-      justify-content: space-around;
-    }
-    .tear-off-item {
-      text-align: center;
-      width: 100px;
-      font-size: 14px;
-    }
-  </style>
-</head>
-<body>
-  <div class="flyer">
-    <div class="header">
-      <h1 class="title">Community Event</h1>
-      <h2 class="subtitle">Join us for a day of fun and learning</h2>
-    </div>
-    
-    <div class="content">
-      <div class="date-time">
-        <h2>Saturday, August 15, 2023</h2>
-        <p>1:00 PM - 5:00 PM</p>
-        <p>Community Center, 123 Main Street</p>
-      </div>
-      
-      <div class="details">
-        <p>Join us for an exciting community event featuring:</p>
-        <ul style="text-align: left; display: inline-block;">
-          <li>Interactive workshops</li>
-          <li>Guest speakers</li>
-          <li>Networking opportunities</li>
-          <li>Refreshments and snacks</li>
-        </ul>
-        <p>This event is free and open to all community members!</p>
-      </div>
-      
-      <a href="#" class="cta">Register Now</a>
-      
-      <div class="contact">
-        <p>For more information, contact us at:</p>
-        <p>info@communityevent.com | (555) 123-4567</p>
-        
-        <div class="qr-code">
-          <img src="https://via.placeholder.com/150" alt="QR Code">
-          <p>Scan to register</p>
-        </div>
-      </div>
-    </div>
-    
-    <div class="footer">
-      <p>Organized by Your Community Organization</p>
-      <p>www.communityorg.com</p>
-      
-      <div class="tear-off">
-        <div class="tear-off-item">
-          <strong>Event Info</strong>
-          <p>Aug 15, 1-5PM</p>
-        </div>
-        <div class="tear-off-item">
-          <strong>Contact</strong>
-          <p>(555) 123-4567</p>
-        </div>
-        <div class="tear-off-item">
-          <strong>Website</strong>
-          <p>communityorg.com</p>
-        </div>
-      </div>
-    </div>
-  </div>
-</body>
-</html>`
-  },
-  {
-    id: 'flyer-business',
-    name: 'Business Flyer',
-    description: 'Professional layout for business services and promotions',
-    previewSrc: '/template-print-business.png',
-    html: `<!DOCTYPE html>
-<html>
-<head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Business Flyer</title>
-  <style>
-    body {
-      font-family: 'Arial', sans-serif;
-      margin: 0;
-      padding: 0;
-      box-sizing: border-box;
-      color: #333;
-      /* Print-specific settings */
-      width: 8.5in;
-      height: 11in;
-    }
-    .flyer {
-      width: 100%;
-      height: 100%;
-      position: relative;
-      background-color: #ffffff;
-      display: flex;
-      flex-direction: column;
-    }
-    .header {
-      background-color: #0f172a;
-      color: white;
-      padding: 30px;
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-    }
-    .logo {
-      font-size: 28px;
-      font-weight: bold;
-      text-transform: uppercase;
-      letter-spacing: 1px;
-    }
-    .tagline {
-      font-size: 16px;
-      font-style: italic;
-    }
-    .hero {
-      background-color: #e2e8f0;
-      padding: 50px 30px;
-      text-align: center;
-    }
-    .hero h1 {
-      font-size: 36px;
-      margin: 0 0 20px 0;
-      color: #0f172a;
-    }
-    .hero p {
-      font-size: 18px;
-      max-width: 600px;
-      margin: 0 auto;
-      line-height: 1.5;
-    }
-    .services {
-      display: flex;
-      padding: 30px;
-      justify-content: space-between;
-      background-color: #ffffff;
-      flex: 1;
-    }
-    .service {
-      flex: 1;
-      margin: 0 15px;
-      text-align: center;
-      padding: 20px;
-      border-radius: 8px;
-      background-color: #f8fafc;
-      box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
-    }
-    .service h3 {
-      color: #0f172a;
-      margin-top: 0;
-    }
-    .testimonial {
-      background-color: #0f172a;
-      color: white;
-      padding: 30px;
-      text-align: center;
-      font-style: italic;
-    }
-    .testimonial p {
-      font-size: 18px;
-      max-width: 700px;
-      margin: 0 auto 20px auto;
-    }
-    .contact {
-      background-color: #e2e8f0;
-      padding: 30px;
-      text-align: center;
-    }
-    .cta-button {
-      display: inline-block;
-      background-color: #0f172a;
-      color: white;
-      padding: 12px 25px;
-      text-decoration: none;
-      border-radius: 30px;
-      font-weight: bold;
-      margin-top: 15px;
-    }
-    .footer {
-      background-color: #0f172a;
-      color: white;
-      padding: 20px 30px;
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-      font-size: 14px;
-    }
-    .qr-container {
-      background-color: white;
-      padding: 10px;
-      border-radius: 5px;
-    }
-  </style>
-</head>
-<body>
-  <div class="flyer">
-    <div class="header">
-      <div class="logo">Business Name</div>
-      <div class="tagline">Professional Services & Solutions</div>
-    </div>
-    
-    <div class="hero">
-      <h1>Elevate Your Business</h1>
-      <p>We provide innovative solutions to help your business grow and thrive in today's competitive market.</p>
-    </div>
-    
-    <div class="services">
-      <div class="service">
-        <h3>Strategic Consulting</h3>
-        <p>Expert advice tailored to your industry and specific business challenges.</p>
-      </div>
-      
-      <div class="service">
-        <h3>Digital Marketing</h3>
-        <p>Comprehensive marketing strategies to boost your online presence.</p>
-      </div>
-      
-      <div class="service">
-        <h3>Business Analytics</h3>
-        <p>Data-driven insights to optimize your operations and increase profitability.</p>
-      </div>
-    </div>
-    
-    <div class="testimonial">
-      <p>"Working with Business Name transformed our operations and increased our revenue by 35% in just six months."</p>
-      <strong>— Jane Smith, CEO of Client Company</strong>
-    </div>
-    
-    <div class="contact">
-      <h2>Ready to Take Your Business to the Next Level?</h2>
-      <p>Contact us today for a free consultation</p>
-      <a href="#" class="cta-button">Get Started</a>
-      <p>info@businessname.com | (555) 987-6543</p>
-    </div>
-    
-    <div class="footer">
-      <div>
-        <p>Business Name LLC</p>
-        <p>123 Business Avenue, Suite 200</p>
-        <p>City, State 12345</p>
-      </div>
-      
-      <div class="qr-container">
-        <img src="https://via.placeholder.com/100" alt="QR Code">
-      </div>
-    </div>
-  </div>
-</body>
-</html>`
-  },
-  {
-    id: 'flyer-product',
-    name: 'Product Showcase',
-    description: 'Highlight product features with visual emphasis',
-    previewSrc: '/template-print-product.png',
-    html: `<!DOCTYPE html>
-<html>
-<head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Product Showcase Flyer</title>
-  <style>
-    body {
-      font-family: 'Arial', sans-serif;
-      margin: 0;
-      padding: 0;
-      box-sizing: border-box;
-      color: #333;
-      /* Print-specific settings */
-      width: 8.5in;
-      height: 11in;
-    }
-    .flyer {
-      width: 100%;
-      height: 100%;
-      position: relative;
-      overflow: hidden;
-      background-color: #ffffff;
-    }
-    .product-header {
-      background-color: #4f46e5;
-      color: white;
-      padding: 30px;
-      text-align: center;
-    }
-    .product-name {
-      font-size: 42px;
-      margin: 0;
-      text-transform: uppercase;
-      letter-spacing: 2px;
-    }
-    .product-tagline {
-      font-size: 20px;
-      margin-top: 10px;
-      font-weight: normal;
     }
     .product-image {
-      text-align: center;
-      padding: 30px;
-      background-color: #f5f5f5;
-    }
-    .product-image img {
-      max-width: 80%;
+      max-width: 100%;
       height: auto;
-      box-shadow: 0 8px 20px rgba(0, 0, 0, 0.15);
+      margin-bottom: 20px;
     }
-    .features {
-      display: flex;
-      flex-wrap: wrap;
-      padding: 20px;
-      justify-content: space-around;
-    }
-    .feature {
-      width: 45%;
-      margin: 10px;
-      padding: 20px;
-      background-color: #f5f5f5;
-      border-radius: 8px;
-    }
-    .feature h3 {
-      color: #4f46e5;
-      margin-top: 0;
-    }
-    .specifications {
-      background-color: #ede9fe;
-      padding: 30px;
-      margin: 20px;
-      border-radius: 8px;
-    }
-    .specifications h2 {
-      color: #4f46e5;
-      text-align: center;
-      margin-top: 0;
-    }
-    .specs-grid {
-      display: grid;
-      grid-template-columns: repeat(2, 1fr);
-      gap: 20px;
-    }
-    .spec-item {
-      display: flex;
-    }
-    .spec-label {
-      font-weight: bold;
-      width: 40%;
-    }
-    .pricing {
-      text-align: center;
-      padding: 30px;
-      background-color: #4f46e5;
-      color: white;
-    }
-    .price {
-      font-size: 36px;
-      font-weight: bold;
-      margin: 10px 0;
-    }
-    .contact-info {
-      background-color: #f5f5f5;
-      padding: 20px;
-      text-align: center;
-      position: absolute;
-      bottom: 0;
-      width: 100%;
-      box-sizing: border-box;
-    }
-    .cta-button {
+    .button {
       display: inline-block;
-      background-color: #4f46e5;
+      background-color: #28a745;
       color: white;
-      padding: 12px 30px;
       text-decoration: none;
-      border-radius: 50px;
-      font-weight: bold;
+      padding: 10px 20px;
+      border-radius: 4px;
       margin-top: 10px;
+    }
+    .footer {
+      background-color: #f8f9fa;
+      padding: 20px;
+      text-align: center;
+      font-size: 12px;
+      color: #6c757d;
     }
   </style>
 </head>
 <body>
-  <div class="flyer">
-    <div class="product-header">
-      <h1 class="product-name">Product Name</h1>
-      <h2 class="product-tagline">The Next Generation Solution</h2>
+  <div class="container">
+    <div class="header">
+      <h1>Introducing Our New Product!</h1>
     </div>
-    
-    <div class="product-image">
-      <img src="https://via.placeholder.com/600x400" alt="Product Image">
+    <div class="content">
+      <h2>Check out the latest innovation</h2>
+      <img src="https://via.placeholder.com/600x300" alt="Product Image" class="product-image">
+      <p>We're excited to announce the launch of our new product, designed to make your life easier and more efficient.</p>
+      <p>Here are some key features:</p>
+      <ul>
+        <li>Feature 1: Solves problem A</li>
+        <li>Feature 2: Improves efficiency by X%</li>
+        <li>Feature 3: Integrates seamlessly with your workflow</li>
+      </ul>
+      <a href="#" class="button">Learn More</a>
     </div>
-    
-    <div class="features">
-      <div class="feature">
-        <h3>Key Feature 1</h3>
-        <p>Detailed description of this amazing feature and how it benefits the user.</p>
-      </div>
-      
-      <div class="feature">
-        <h3>Key Feature 2</h3>
-        <p>Detailed description of this amazing feature and how it benefits the user.</p>
-      </div>
-      
-      <div class="feature">
-        <h3>Key Feature 3</h3>
-        <p>Detailed description of this amazing feature and how it benefits the user.</p>
-      </div>
-      
-      <div class="feature">
-        <h3>Key Feature 4</h3>
-        <p>Detailed description of this amazing feature and how it benefits the user.</p>
-      </div>
-    </div>
-    
-    <div class="specifications">
-      <h2>Technical Specifications</h2>
-      <div class="specs-grid">
-        <div class="spec-item">
-          <div class="spec-label">Dimensions:</div>
-          <div>10" × 8" × 2"</div>
-        </div>
-        <div class="spec-item">
-          <div class="spec-label">Weight:</div>
-          <div>2.5 lbs</div>
-        </div>
-        <div class="spec-item">
-          <div class="spec-label">Material:</div>
-          <div>Premium aluminum</div>
-        </div>
-        <div class="spec-item">
-          <div class="spec-label">Battery Life:</div>
-          <div>Up to 12 hours</div>
-        </div>
-        <div class="spec-item">
-          <div class="spec-label">Warranty:</div>
-          <div>2-year limited</div>
-        </div>
-        <div class="spec-item">
-          <div class="spec-label">Connectivity:</div>
-          <div>Bluetooth 5.0, WiFi</div>
-        </div>
-      </div>
-    </div>
-    
-    <div class="pricing">
-      <h2>Special Introductory Price</h2>
-      <div class="price">$299.99</div>
-      <p>Limited time offer - Regular price $349.99</p>
-    </div>
-    
-    <div class="contact-info">
-      <h3>For more information or to place an order:</h3>
-      <p>sales@productcompany.com | (555) 123-4567</p>
-      <p>www.productcompany.com</p>
-      <a href="#" class="cta-button">Order Now</a>
+    <div class="footer">
+      <p>© 2023 Your Company. All rights reserved.</p>
+      <p>You're receiving this email because you're a valued customer.</p>
+      <p><a href="#">Unsubscribe</a> | <a href="#">View in browser</a></p>
     </div>
   </div>
 </body>
-</html>`
-  }
+</html>`,
+    category: "email",
+    thumbnail: "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='200' height='300' viewBox='0 0 200 300'%3E%3Crect width='200' height='300' fill='%23ffffff'/%3E%3Crect x='20' y='20' width='160' height='40' fill='%23f8f9fa'/%3E%3Ctext x='100' y='45' font-family='Arial' font-size='12' text-anchor='middle' fill='%23333333'%3EProduct Announcement%3C/text%3E%3Crect x='20' y='60' width='160' height='120' fill='%23ffffff'/%3E%3Crect x='30' y='70' width='140' height='60' fill='%23dddddd'/%3E%3Ctext x='100' y='95' font-family='Arial' font-size='10' text-anchor='middle' fill='%23555555'%3EProduct Image%3C/text%3E%3Crect x='30' y='140' width='5' height='5' fill='%23333333'/%3E%3Crect x='30' y='155' width='5' height='5' fill='%23333333'/%3E%3Crect x='30' y='170' width='5' height='5' fill='%23333333'/%3E%3Crect x='30' y='200' width='70' height='20' rx='4' fill='%2328a745'/%3E%3Ctext x='65' y='214' font-family='Arial' font-size='10' text-anchor='middle' fill='%23ffffff'%3ELearn More%3C/text%3E%3Crect x='20' y='240' width='160' height='40' fill='%23f8f9fa'/%3E%3Ctext x='100' y='265' font-family='Arial' font-size='8' text-anchor='middle' fill='%236c757d'%3E© 2023 Your Company%3C/text%3E%3C/svg%3E"
+  },
+  {
+    id: "email-3",
+    name: "Event Invitation",
+    html: `<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Event Invitation Email</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      line-height: 1.6;
+      color: #333;
+      margin: 0;
+      padding: 0;
+    }
+    .container {
+      max-width: 600px;
+      margin: 0 auto;
+      padding: 20px;
+    }
+    .header {
+      background-color: #ffc107;
+      padding: 20px;
+      text-align: center;
+      color: #fff;
+    }
+    .content {
+      padding: 20px;
+    }
+    .event-details {
+      margin-bottom: 20px;
+    }
+    .button {
+      display: inline-block;
+      background-color: #007bff;
+      color: white;
+      text-decoration: none;
+      padding: 10px 20px;
+      border-radius: 4px;
+      margin-top: 10px;
+    }
+    .footer {
+      background-color: #f8f9fa;
+      padding: 20px;
+      text-align: center;
+      font-size: 12px;
+      color: #6c757d;
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <div class="header">
+      <h1>You're Invited!</h1>
+      <p>Join us for our annual event</p>
+    </div>
+    <div class="content">
+      <h2>Annual Networking Event</h2>
+      <div class="event-details">
+        <p><strong>Date:</strong> February 24, 2023</p>
+        <p><strong>Time:</strong> 6:00 PM - 9:00 PM</p>
+        <p><strong>Location:</strong> The Grand Ballroom</p>
+      </div>
+      <p>We're excited to invite you to our annual networking event, where you'll have the opportunity to connect with industry leaders and learn about the latest trends.</p>
+      <a href="#" class="button">Register Now</a>
+    </div>
+    <div class="footer">
+      <p>© 2023 Your Company. All rights reserved.</p>
+      <p>You're receiving this email because you're a valued member of our community.</p>
+      <p><a href="#">Unsubscribe</a> | <a href="#">View in browser</a></p>
+    </div>
+  </div>
+</body>
+</html>`,
+    category: "email",
+    thumbnail: "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='200' height='300' viewBox='0 0 200 300'%3E%3Crect width='200' height='300' fill='%23ffffff'/%3E%3Crect x='20' y='20' width='160' height='40' fill='%23ffc107'/%3E%3Ctext x='100' y='45' font-family='Arial' font-size='12' text-anchor='middle' fill='%23ffffff'%3EEvent Invitation%3C/text%3E%3Crect x='20' y='60' width='160' height='120' fill='%23ffffff'/%3E%3Ctext x='30' y='80' font-family='Arial' font-size='10' fill='%23333333'%3EDate: February 24, 2023%3C/text%3E%3Ctext x='30' y='95' font-family='Arial' font-size='10' fill='%23333333'%3ETime: 6:00 PM - 9:00 PM%3C/text%3E%3Ctext x='30' y='110' font-family='Arial' font-size='10' fill='%23333333'%3ELocation: The Grand Ballroom%3C/text%3E%3Crect x='30' y='140' width='70' height='20' rx='4' fill='%23007bff'/%3E%3Ctext x='65' y='154' font-family='Arial' font-size='10' text-anchor='middle' fill='%23ffffff'%3ERegister Now%3C/text%3E%3Crect x='20' y='240' width='160' height='40' fill='%23f8f9fa'/%3E%3Ctext x='100' y='265' font-family='Arial' font-size='8' text-anchor='middle' fill='%236c757d'%3E© 2023 Your Company%3C/text%3E%3C/svg%3E"
+  },
 ];
 
-// New Gmail signature templates
-const SIGNATURE_TEMPLATES = [
+const printTemplates: TemplateData[] = [
   {
-    id: 'signature-basic',
-    name: 'Professional Basic',
-    description: 'Clean, professional signature with contact details',
-    previewSrc: '/signature-basic.png',
-    html: `<div style="font-family: Arial, sans-serif; max-width: 500px; color: #333333;">
-  <table cellpadding="0" cellspacing="0" style="border-collapse: collapse; width: 100%;">
-    <tr>
-      <td style="padding-bottom: 10px; border-bottom: 2px solid #3b82f6;">
-        <p style="font-size: 16px; margin: 0; font-weight: bold;">John Smith</p>
-        <p style="font-size: 14px; margin: 0; color: #666666;">Marketing Director</p>
-      </td>
-    </tr>
-    <tr>
-      <td style="padding-top: 10px; font-size: 12px;">
-        <p style="margin: 0; line-height: 1.5;">
-          <span style="color: #3b82f6; font-weight: bold;">Email:</span> john.smith@company.com<br>
-          <span style="color: #3b82f6; font-weight: bold;">Phone:</span> (555) 123-4567<br>
-          <span style="color: #3b82f6; font-weight: bold;">Website:</span> <a href="https://www.company.com" style="color: #3b82f6; text-decoration: none;">www.company.com</a>
-        </p>
-      </td>
-    </tr>
-  </table>
-</div>`
+    id: "print-1",
+    name: "Business Letter",
+    html: `<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Business Letter</title>
+  <style>
+    @page {
+      size: letter;
+      margin: 1in;
+    }
+    body {
+      font-family: 'Times New Roman', Times, serif;
+      font-size: 12pt;
+      line-height: 1.5;
+      margin: 0;
+      padding: 0;
+    }
+    .letterhead {
+      text-align: center;
+      margin-bottom: 1in;
+    }
+    .date {
+      margin-bottom: 0.5in;
+    }
+    .inside-address {
+      margin-bottom: 0.25in;
+    }
+    .salutation {
+      margin-bottom: 0.25in;
+    }
+    .body {
+      margin-bottom: 0.5in;
+    }
+    .closing {
+      margin-bottom: 0.5in;
+    }
+    .signature {
+      margin-bottom: 0.25in;
+      height: 0.5in;
+    }
+  </style>
+</head>
+<body>
+  <div class="letterhead">
+    <h1>Your Company Name</h1>
+    <p>123 Main Street, Anytown, ST 12345</p>
+    <p>Phone: (123) 456-7890 | Email: info@example.com</p>
+  </div>
+  
+  <div class="date">
+    <p>January 1, 2023</p>
+  </div>
+  
+  <div class="inside-address">
+    <p>John Smith<br>
+    Acme Corporation<br>
+    456 Business Ave<br>
+    Businesstown, ST 67890</p>
+  </div>
+  
+  <div class="salutation">
+    <p>Dear Mr. Smith:</p>
+  </div>
+  
+  <div class="body">
+    <p>I am writing to express my interest in the position of Marketing Manager that was advertised on your company website. With over five years of experience in digital marketing and a proven track record of successful campaigns, I believe I would be a valuable addition to your team.</p>
+    
+    <p>Throughout my career, I have developed expertise in social media marketing, content creation, and analytics. I have consistently exceeded KPIs and helped my previous employers increase their online presence and customer engagement.</p>
+    
+    <p>I am particularly impressed with Acme Corporation's innovative approach to product development and your commitment to sustainability. I am confident that my skills and experience align well with your company's values and objectives.</p>
+    
+    <p>I have attached my resume for your review and would welcome the opportunity to discuss my application further in an interview. Thank you for your time and consideration.</p>
+  </div>
+  
+  <div class="closing">
+    <p>Sincerely,</p>
+  </div>
+  
+  <div class="signature">
+    <!-- Signature space -->
+  </div>
+  
+  <div class="printed-name">
+    <p>Your Name<br>
+    Your Title</p>
+  </div>
+</body>
+</html>`,
+    category: "print",
+    thumbnail: "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='200' height='300' viewBox='0 0 200 300'%3E%3Crect width='200' height='300' fill='%23ffffff'/%3E%3Ctext x='100' y='30' font-family='Times New Roman' font-size='12' text-anchor='middle' fill='%23000000'%3EYour Company Name%3C/text%3E%3Ctext x='100' y='42' font-family='Times New Roman' font-size='8' text-anchor='middle' fill='%23000000'%3E123 Main Street, Anytown, ST 12345%3C/text%3E%3Ctext x='20' y='70' font-family='Times New Roman' font-size='8' fill='%23000000'%3EJanuary 1, 2023%3C/text%3E%3Ctext x='20' y='90' font-family='Times New Roman' font-size='8' fill='%23000000'%3EJohn Smith%3C/text%3E%3Ctext x='20' y='100' font-family='Times New Roman' font-size='8' fill='%23000000'%3EAcme Corporation%3C/text%3E%3Ctext x='20' y='130' font-family='Times New Roman' font-size='8' fill='%23000000'%3EDear Mr. Smith:%3C/text%3E%3Crect x='20' y='140' width='160' height='2' fill='%23eeeeee'/%3E%3Crect x='20' y='150' width='160' height='2' fill='%23eeeeee'/%3E%3Crect x='20' y='160' width='160' height='2' fill='%23eeeeee'/%3E%3Crect x='20' y='170' width='160' height='2' fill='%23eeeeee'/%3E%3Crect x='20' y='190' width='160' height='2' fill='%23eeeeee'/%3E%3Ctext x='20' y='240' font-family='Times New Roman' font-size='8' fill='%23000000'%3ESincerely,%3C/text%3E%3Ctext x='20' y='270' font-family='Times New Roman' font-size='8' fill='%23000000'%3EYour Name%3C/text%3E%3C/svg%3E"
   },
-  {
-    id: 'signature-with-photo',
-    name: 'With Photo',
-    description: 'Professional signature with photo and social media icons',
-    previewSrc: '/signature-with-photo.png',
-    html: `<div style="font-family: Arial, sans-serif; max-width: 500px; color: #333333;">
-  <table cellpadding="0" cellspacing="0" style="border-collapse: collapse; width: 100%;">
-    <tr>
-      <td style="vertical-align: top; width: 100px;">
-        <img src="https://via.placeholder.com/100" alt="Profile Photo" style="width: 80px; height: 80px; border-radius: 50%;">
-      </td>
-      <td style="vertical-align: top; padding-left: 15px;">
-        <p style="font-size: 18px; margin: 0; font-weight: bold; color: #2563eb;">Jane Wilson</p>
-        <p style="font-size: 14px; margin: 0 0 10px 0; color: #666666;">Senior Developer</p>
-        
-        <p style="font-size: 12px; margin: 0; line-height: 1.5;">
-          <span style="color: #2563eb; font-weight: bold;">Email:</span> jane.wilson@techcompany.com<br>
-          <span style="color: #2563eb; font-weight: bold;">Phone:</span> (555) 987-6543<br>
-          <span style="color: #2563eb; font-weight: bold;">LinkedIn:</span> <a href="https://linkedin.com/in/janewilson" style="color: #2563eb; text-decoration: none;">linkedin.com/in/janewilson</a>
-        </p>
-      </td>
-    </tr>
-    <tr>
-      <td colspan="2" style="padding-top: 10px;">
-        <div style="border-top: 1px solid #e5e7eb; padding-top: 10px;">
-          <a href="https://twitter.com" style="display: inline-block; margin-right: 8px;"><img src="https://via.placeholder.com/24" alt="Twitter" style="width: 24px; height: 24px;"></a>
-          <a href="https://linkedin.com" style="display: inline-block; margin-right: 8px;"><img src="https://via.placeholder.com/24" alt="LinkedIn" style="width: 24px; height: 24px;"></a>
-          <a href="https://github.com" style="display: inline-block;"><img src="https://via.placeholder.com/24" alt="GitHub" style="width: 24px; height: 24px;"></a>
-        </div>
-      </td>
-    </tr>
-  </table>
-</div>`
-  },
-  {
-    id: 'signature-corporate',
-    name: 'Corporate',
-    description: 'Professional corporate signature with logo and disclaimer',
-    previewSrc: '/signature-corporate.png',
-    html: `<div style="font-family: Arial, sans-serif; max-width: 500px; color: #333333;">
-  <table cellpadding="0" cellspacing="0" style="border-collapse: collapse; width: 100%;">
-    <tr>
-      <td style="width: 120px; vertical-align: top;">
-        <img src="https://via.placeholder.com/120x60" alt="Company Logo" style="width: 120px;">
-      </td>
-      <td style="vertical-align: top; padding-left: 15px; border-left: 3px solid #0f172a;">
-        <p style="font-size: 16px; margin: 0; font-weight: bold;">Michael Johnson</p>
-        <p style="font-size: 14px; margin: 0 0 5px 0; color: #666666;">Chief Financial Officer</p>
-        
-        <p style="font-size: 12px; margin: 0; line-height: 1.5;">
-          <span style="color: #0f172a; font-weight: bold;">Email:</span> michael.johnson@corporation.com<br>
-          <span style="color: #0f172a; font-weight: bold;">Direct:</span> (555) 123-4567<br>
-          <span style="color: #0f172a; font-weight: bold;">Office:</span> (555) 987-6543
-        </p>
-      </td>
-    </tr>
-    <tr>
-      <td colspan="2" style="padding-top: 10px; border-top: 1px solid #e5e7eb; margin-top: 10px;">
-        <p style="font-size: 11px; color: #666666; margin: 5px 0 0 0;">
-          Global Headquarters: 123 Corporate Plaza, Suite 500, New York, NY 10001
-        </p>
-        <p style="font-size: 10px; color: #999999; margin: 5px 0 0 0; font-style: italic;">
-          This email and any files transmitted with it are confidential and intended solely for the use of the individual or entity to whom they are addressed.
-        </p>
-      </td>
-    </tr>
-  </table>
-</div>`
-  },
-  {
-    id: 'signature-minimalist',
-    name: 'Minimalist',
-    description: 'Clean, simple signature with minimal styling',
-    previewSrc: '/signature-minimalist.png',
-    html: `<div style="font-family: 'Helvetica Neue', Helvetica, Arial, sans-serif; max-width: 500px; color: #333333;">
-  <p style="margin: 0; font-size: 16px; font-weight: 500;">Alex Morgan</p>
-  <p style="margin: 0; font-size: 14px; color: #666666;">Product Designer</p>
-  <p style="margin: 8px 0 0 0; font-size: 12px; color: #666666;">
-    alex@designstudio.com | (555) 234-5678
-  </p>
-  <p style="margin: 0; font-size: 12px; color: #666666;">
-    designstudio.com
-  </p>
-</div>`
-  }
 ];
+
+interface TemplateSelectorProps {
+  isOpen: boolean;
+  onClose: () => void;
+  onSelect: (template: string) => void;
+}
 
 const TemplateSelector = ({ isOpen, onClose, onSelect }: TemplateSelectorProps) => {
-  const [activeTab, setActiveTab] = useState<string>("email");
-  
-  const handleSelectTemplate = (templateHtml: string) => {
-    onSelect(templateHtml);
+  const [activeTab, setActiveTab] = useState("email");
+
+  const handleTemplateSelect = (template: TemplateData | GmailTemplate) => {
+    onSelect(template.html);
     onClose();
   };
 
   return (
-    <Dialog open={isOpen} onOpenChange={onClose}>
-      <DialogContent className="sm:max-w-[900px] max-h-[80vh] p-0 overflow-hidden animate-fade-in">
-        <DialogHeader className="px-6 pt-6 pb-2">
-          <DialogTitle className="text-2xl">Select a Template</DialogTitle>
+    <Dialog open={isOpen} onOpenChange={(open) => !open && onClose()}>
+      <DialogContent className="sm:max-w-[900px] h-[80vh] max-h-[700px] animate-fade-in">
+        <DialogHeader>
+          <DialogTitle className="text-xl">Choose a Template</DialogTitle>
         </DialogHeader>
         
         <Tabs defaultValue="email" value={activeTab} onValueChange={setActiveTab} className="w-full">
-          <div className="px-6">
-            <TabsList className="grid w-full grid-cols-3">
-              <TabsTrigger value="email" className="flex items-center gap-2">
-                <Mail className="h-4 w-4" />
-                <span>Email Templates</span>
-              </TabsTrigger>
-              <TabsTrigger value="print" className="flex items-center gap-2">
-                <Printer className="h-4 w-4" />
-                <span>Print Templates</span>
-              </TabsTrigger>
-              <TabsTrigger value="signature" className="flex items-center gap-2">
-                <AtSign className="h-4 w-4" />
-                <span>Gmail Signatures</span>
-              </TabsTrigger>
-            </TabsList>
-          </div>
+          <TabsList className="grid w-full grid-cols-3">
+            <TabsTrigger value="email">Email Templates</TabsTrigger>
+            <TabsTrigger value="print">Print Templates</TabsTrigger>
+            <TabsTrigger value="gmail">Gmail Signatures</TabsTrigger>
+          </TabsList>
           
-          <ScrollArea className="h-[500px] mt-4 px-6">
-            <TabsContent value="email" className="p-0 m-0">
-              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 mt-4">
-                {EMAIL_TEMPLATES.map((template) => (
-                  <div 
+          <TabsContent value="email" className="mt-4">
+            <ScrollArea className="h-[500px]">
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 p-2">
+                {emailTemplates.map((template) => (
+                  <Card 
                     key={template.id}
-                    className="border border-border rounded-lg overflow-hidden hover:shadow-md transition-all cursor-pointer group"
-                    onClick={() => handleSelectTemplate(template.html)}
+                    className="cursor-pointer overflow-hidden transition-all duration-200 hover:shadow-md"
+                    onClick={() => handleTemplateSelect(template)}
                   >
-                    <div className="relative aspect-[3/4] overflow-hidden bg-muted">
-                      <img 
-                        src={template.previewSrc} 
-                        alt={template.name}
-                        className="w-full h-full object-cover transition-transform group-hover:scale-105"
+                    <div className="relative pb-[150%] overflow-hidden bg-muted">
+                      <div 
+                        className="absolute inset-0 hover:scale-105 transition-transform duration-200"
+                        style={{
+                          backgroundImage: `url(${template.thumbnail})`,
+                          backgroundSize: 'cover',
+                          backgroundPosition: 'center',
+                        }}
                       />
                     </div>
-                    <div className="p-4">
-                      <h3 className="font-medium text-lg">{template.name}</h3>
-                      <p className="text-sm text-muted-foreground">{template.description}</p>
-                    </div>
-                  </div>
+                    <CardContent className="p-3">
+                      <h3 className="font-medium">{template.name}</h3>
+                    </CardContent>
+                  </Card>
                 ))}
               </div>
-            </TabsContent>
-            
-            <TabsContent value="print" className="p-0 m-0">
-              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 mt-4">
-                {PRINT_TEMPLATES.map((template) => (
-                  <div 
+            </ScrollArea>
+          </TabsContent>
+          
+          <TabsContent value="print" className="mt-4">
+            <ScrollArea className="h-[500px]">
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 p-2">
+                {printTemplates.map((template) => (
+                  <Card 
                     key={template.id}
-                    className="border border-border rounded-lg overflow-hidden hover:shadow-md transition-all cursor-pointer group"
-                    onClick={() => handleSelectTemplate(template.html)}
+                    className="cursor-pointer overflow-hidden transition-all duration-200 hover:shadow-md"
+                    onClick={() => handleTemplateSelect(template)}
                   >
-                    <div className="relative aspect-[3/4] overflow-hidden bg-muted">
-                      <img 
-                        src={template.previewSrc} 
-                        alt={template.name}
-                        className="w-full h-full object-cover transition-transform group-hover:scale-105"
+                    <div className="relative pb-[150%] overflow-hidden bg-muted">
+                      <div 
+                        className="absolute inset-0 hover:scale-105 transition-transform duration-200"
+                        style={{
+                          backgroundImage: `url(${template.thumbnail})`,
+                          backgroundSize: 'cover',
+                          backgroundPosition: 'center',
+                        }}
                       />
                     </div>
-                    <div className="p-4">
-                      <h3 className="font-medium text-lg">{template.name}</h3>
-                      <p className="text-sm text-muted-foreground">{template.description}</p>
-                    </div>
-                  </div>
+                    <CardContent className="p-3">
+                      <h3 className="font-medium">{template.name}</h3>
+                    </CardContent>
+                  </Card>
                 ))}
               </div>
-            </TabsContent>
-            
-            <TabsContent value="signature" className="p-0 m-0">
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mt-4">
-                {SIGNATURE_TEMPLATES.map((template) => (
-                  <div 
+            </ScrollArea>
+          </TabsContent>
+          
+          <TabsContent value="gmail" className="mt-4">
+            <ScrollArea className="h-[500px]">
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 p-2">
+                {gmailSignatureTemplates.map((template) => (
+                  <Card 
                     key={template.id}
-                    className="border border-border rounded-lg overflow-hidden hover:shadow-md transition-all cursor-pointer group"
-                    onClick={() => handleSelectTemplate(template.html)}
+                    className="cursor-pointer overflow-hidden transition-all duration-200 hover:shadow-md"
+                    onClick={() => handleTemplateSelect(template)}
                   >
-                    <div className="relative aspect-[2/1] overflow-hidden bg-muted">
-                      <img 
-                        src={template.previewSrc} 
-                        alt={template.name}
-                        className="w-full h-full object-cover transition-transform group-hover:scale-105"
+                    <div className="relative pb-[150%] overflow-hidden bg-muted">
+                      <div 
+                        className="absolute inset-0 hover:scale-105 transition-transform duration-200"
+                        style={{
+                          backgroundImage: `url(${template.thumbnail})`,
+                          backgroundSize: 'cover',
+                          backgroundPosition: 'center',
+                        }}
                       />
                     </div>
-                    <div className="p-4">
-                      <h3 className="font-medium text-lg">{template.name}</h3>
-                      <p className="text-sm text-muted-foreground">{template.description}</p>
-                    </div>
-                  </div>
+                    <CardContent className="p-3">
+                      <h3 className="font-medium">{template.name}</h3>
+                    </CardContent>
+                  </Card>
                 ))}
               </div>
-            </TabsContent>
-          </ScrollArea>
+            </ScrollArea>
+          </TabsContent>
         </Tabs>
       </DialogContent>
     </Dialog>

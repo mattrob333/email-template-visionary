@@ -11,7 +11,6 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { exportAsPdf } from '../utils/exportUtils';
-import { PrintSettings } from '../components/PrintOptions';
 
 const initialTemplate = `<!DOCTYPE html>
 <html>
@@ -159,10 +158,6 @@ const Index = () => {
     toast.success('Template loaded');
   };
   
-  const handleColorSelect = (color: string) => {
-    toast.success(`Color ${color} selected`);
-  };
-  
   const handleExportPdf = () => {
     if (!previewRef.current) {
       toast.error('Preview not available');
@@ -171,18 +166,11 @@ const Index = () => {
     
     setIsExporting(true);
     
-    // Use US Letter size for PDF export directly
-    const options: PrintSettings = {
+    // Always use US Letter size for PDF export
+    exportAsPdf(previewRef.current.getIframeRef(), {
       pageSize: 'letter',
       orientation: 'portrait',
-      showGuides: false,
       filename: 'document.pdf'
-    };
-    
-    exportAsPdf(previewRef.current.getIframeRef(), {
-      pageSize: options.pageSize,
-      orientation: options.orientation,
-      filename: options.filename
     }).then(success => {
       setIsExporting(false);
       if (success) {

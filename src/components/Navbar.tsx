@@ -1,22 +1,16 @@
-
 import { useState } from 'react';
+import { Moon, Sun, Save, FileCode, Image, FileText, Menu } from 'lucide-react';
 import { Button } from "@/components/ui/button";
-import {
-  Copy,
-  Mail,
-  Save,
-  LayoutGrid,
-  Sun,
-  Moon,
-  FileDown,
-  Image,
-  Loader2
-} from "lucide-react";
-import { copyToClipboard, copyRenderedContent } from '../utils/exportUtils';
-import { toast } from 'sonner';
 import { TemplateModal } from './TemplateModal';
 import TemplateSelector from './TemplateSelector';
 import ImageManager from './ImageManager';
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuSeparator,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu"
 
 interface NavbarProps {
   htmlContent: string;
@@ -26,126 +20,122 @@ interface NavbarProps {
   onLoadTemplate: (template: any) => void;
   onLoadNewTemplate: (html: string) => void;
   onInsertImage: (imageHtml: string) => void;
-  previewRef: React.RefObject<any>;
+  previewRef: any;
   previewMode: 'email' | 'print';
   onExportPdf: () => void;
-  isExporting?: boolean;
+  isExporting: boolean;
 }
 
-const Navbar = ({ 
-  htmlContent, 
-  isDarkMode, 
-  toggleDarkMode, 
-  onSaveTemplate, 
+const Navbar = ({
+  htmlContent,
+  isDarkMode,
+  toggleDarkMode,
+  onSaveTemplate,
   onLoadTemplate,
   onLoadNewTemplate,
   onInsertImage,
   previewRef,
+  previewMode,
   onExportPdf,
-  isExporting = false
+  isExporting,
 }: NavbarProps) => {
   const [isTemplateModalOpen, setIsTemplateModalOpen] = useState(false);
-  const [isTemplateSelectorOpen, setIsTemplateSelectorOpen] = useState(false);
+  const [isSelectTemplateOpen, setIsSelectTemplateOpen] = useState(false);
   const [isImageManagerOpen, setIsImageManagerOpen] = useState(false);
-
-  const handleCopyForGmail = async () => {
-    if (!previewRef.current) {
-      toast.error('Preview not available');
-      return;
-    }
-    
-    const success = await copyRenderedContent(previewRef.current.getIframeRef());
-    if (success) {
-      toast.success('Content copied for Gmail! Paste into your compose window');
-    } else {
-      toast.error('Failed to copy content');
-    }
+  const [isPrintOptionsOpen, setIsPrintOptionsOpen] = useState(false);
+  
+  const handleInsertImageFromModal = (imageHtml: string) => {
+    onInsertImage(imageHtml);
   };
 
   return (
-    <>
-      <header className="w-full border-b border-border/40 bg-background/95 backdrop-blur-sm supports-backdrop-blur:bg-background/60 z-10">
-        <div className="container flex h-16 items-center justify-between">
-          <div className="flex items-center gap-2">
-            <Mail className="h-6 w-6 text-primary" />
-            <h1 className="text-xl font-semibold tracking-tight">
-              HTML Email Designer
-            </h1>
+    <header className="bg-background border-b border-border/40 backdrop-blur-md sticky top-0 z-10">
+      <div className="container mx-auto px-4 py-2">
+        <div className="flex justify-between items-center">
+          <div className="flex items-center space-x-2">
+            <h1 className="text-lg font-semibold lg:text-xl">Email Designer</h1>
           </div>
           
-          <div className="flex items-center gap-4">
+          <div className="flex items-center space-x-2">
             <Button 
               variant="outline" 
-              size="sm" 
-              className="transition-all-fast"
-              onClick={() => setIsTemplateSelectorOpen(true)}
+              size="sm"
+              className="hidden md:flex"
+              onClick={() => setIsTemplateModalOpen(true)}
             >
-              <LayoutGrid className="mr-2 h-4 w-4" />
-              Templates
+              <Save className="h-4 w-4 mr-1" /> Save
             </Button>
             
             <Button 
               variant="outline" 
               size="sm" 
-              className="transition-all-fast"
+              className="hidden md:flex" 
+              onClick={() => setIsSelectTemplateOpen(true)}
+            >
+              <FileCode className="h-4 w-4 mr-1" /> Templates
+            </Button>
+            
+            <Button 
+              variant="outline"
+              size="sm"
+              className="hidden md:flex"
               onClick={() => setIsImageManagerOpen(true)}
             >
-              <Image className="mr-2 h-4 w-4" />
-              Images
-            </Button>
-            
-            <Button 
-              variant="outline" 
-              size="sm" 
-              className="transition-all-fast"
-              onClick={onSaveTemplate}
-            >
-              <Save className="mr-2 h-4 w-4" />
-              Save
-            </Button>
-
-            <Button 
-              variant="outline" 
-              size="sm" 
-              className="transition-all-fast"
-              onClick={handleCopyForGmail}
-            >
-              <Copy className="mr-2 h-4 w-4" />
-              Copy for Gmail
-            </Button>
-
-            <Button 
-              variant="outline" 
-              size="sm" 
-              className="transition-all-fast"
-              onClick={onExportPdf}
-              disabled={isExporting}
-            >
-              {isExporting ? (
-                <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-              ) : (
-                <FileDown className="mr-2 h-4 w-4" />
-              )}
-              Export PDF
+              <Image className="h-4 w-4 mr-1" /> Images
             </Button>
             
             <Button
-              variant="ghost" 
-              size="icon"
-              onClick={toggleDarkMode}
-              className="rounded-full transition-all-fast"
+              variant="outline"
+              size="sm"
+              className="hidden md:flex"
+              onClick={onExportPdf}
+              disabled={isExporting}
             >
-              {isDarkMode ? (
-                <Sun className="h-5 w-5" />
-              ) : (
-                <Moon className="h-5 w-5" />
-              )}
-              <span className="sr-only">Toggle dark mode</span>
+              <FileText className="h-4 w-4 mr-1" />
+              {isExporting ? 'Exporting...' : 'Export PDF'}
             </Button>
+            
+            <Button 
+              size="icon" 
+              variant="ghost" 
+              onClick={toggleDarkMode}
+              className="hidden md:flex"
+            >
+              {isDarkMode ? <Sun className="h-4 w-4" /> : <Moon className="h-4 w-4" />}
+            </Button>
+            
+            <DropdownMenu>
+              <DropdownMenuTrigger asChild>
+                <Button variant="outline" size="icon" className="md:hidden">
+                  <Menu className="h-4 w-4" />
+                </Button>
+              </DropdownMenuTrigger>
+              <DropdownMenuContent>
+                <DropdownMenuItem onClick={() => setIsTemplateModalOpen(true)}>
+                  <Save className="h-4 w-4 mr-2" /> Save Template
+                </DropdownMenuItem>
+                <DropdownMenuItem onClick={() => setIsSelectTemplateOpen(true)}>
+                  <FileCode className="h-4 w-4 mr-2" /> Load Template
+                </DropdownMenuItem>
+                <DropdownMenuItem onClick={() => setIsImageManagerOpen(true)}>
+                  <Image className="h-4 w-4 mr-2" /> Insert Image
+                </DropdownMenuItem>
+                <DropdownMenuItem onClick={onExportPdf} disabled={isExporting}>
+                  <FileText className="h-4 w-4 mr-2" />
+                  {isExporting ? 'Exporting...' : 'Export PDF'}
+                </DropdownMenuItem>
+                <DropdownMenuSeparator />
+                <DropdownMenuItem onClick={toggleDarkMode}>
+                  {isDarkMode ? <Sun className="h-4 w-4 mr-2" /> : <Moon className="h-4 w-4 mr-2" />}
+                  {isDarkMode ? 'Light Mode' : 'Dark Mode'}
+                </DropdownMenuItem>
+              </DropdownMenuContent>
+            </DropdownMenu>
           </div>
         </div>
-      </header>
+      </div>
       
+      {/* Modals */}
       <TemplateModal 
         isOpen={isTemplateModalOpen} 
         onClose={() => setIsTemplateModalOpen(false)}
@@ -153,17 +143,17 @@ const Navbar = ({
       />
       
       <TemplateSelector
-        isOpen={isTemplateSelectorOpen}
-        onClose={() => setIsTemplateSelectorOpen(false)}
+        isOpen={isSelectTemplateOpen}
+        onClose={() => setIsSelectTemplateOpen(false)}
         onSelect={onLoadNewTemplate}
       />
       
       <ImageManager
         isOpen={isImageManagerOpen}
         onClose={() => setIsImageManagerOpen(false)}
-        onInsertImage={onInsertImage}
+        onInsert={onInsertImage}
       />
-    </>
+    </header>
   );
 };
 
