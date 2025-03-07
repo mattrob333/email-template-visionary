@@ -182,6 +182,7 @@ const Navbar = ({
         onClose={() => setIsTemplateModalOpen(false)}
         onSelect={onLoadTemplate}
         currentHtml={htmlContent}
+        previewRef={previewRef} // Pass the previewRef to TemplateModal
       />
       
       <TemplateSelector

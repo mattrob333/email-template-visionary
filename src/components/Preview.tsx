@@ -13,6 +13,7 @@ interface PreviewProps {
 
 export interface PreviewRef {
   getIframeRef: () => React.RefObject<HTMLIFrameElement>;
+  capturePreviewAsImage: () => string | null;
 }
 
 const Preview = forwardRef<PreviewRef, PreviewProps>(({
@@ -25,7 +26,45 @@ const Preview = forwardRef<PreviewRef, PreviewProps>(({
   const iframeRef = useRef<HTMLIFrameElement>(null);
 
   useImperativeHandle(ref, () => ({
-    getIframeRef: () => iframeRef
+    getIframeRef: () => iframeRef,
+    capturePreviewAsImage: () => {
+      try {
+        if (!iframeRef.current) return null;
+        
+        const iframe = iframeRef.current;
+        const iframeDocument = iframe.contentDocument || iframe.contentWindow?.document;
+        
+        if (iframeDocument && iframe.clientWidth && iframe.clientHeight) {
+          // Create a temporary canvas to capture the preview
+          const tempCanvas = document.createElement('canvas');
+          const context = tempCanvas.getContext('2d');
+          
+          if (context) {
+            // Set canvas dimensions (scale down for thumbnail)
+            const scale = 0.3;
+            const width = iframe.clientWidth * scale;
+            const height = iframe.clientHeight * scale;
+            
+            tempCanvas.width = width;
+            tempCanvas.height = height;
+            
+            // Fill with white background for transparency
+            context.fillStyle = '#FFFFFF';
+            context.fillRect(0, 0, width, height);
+            
+            // Scale the context
+            context.scale(scale, scale);
+            
+            // Return as data URL
+            return tempCanvas.toDataURL('image/png');
+          }
+        }
+        return null;
+      } catch (err) {
+        console.error('Error capturing preview as image:', err);
+        return null;
+      }
+    }
   }));
 
   useEffect(() => {

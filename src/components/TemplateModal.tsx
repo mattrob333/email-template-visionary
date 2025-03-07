@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
@@ -19,6 +18,7 @@ export interface Template {
   category: string;
   createdAt: string;
   updatedAt: string;
+  thumbnail?: string;
 }
 
 const defaultTemplates: Template[] = [
@@ -61,9 +61,10 @@ interface TemplateModalProps {
   onClose: () => void;
   onSelect: (template: Template) => void;
   currentHtml: string;
+  previewRef?: React.RefObject<any>;
 }
 
-export const TemplateModal = ({ isOpen, onClose, onSelect, currentHtml }: TemplateModalProps) => {
+export const TemplateModal = ({ isOpen, onClose, onSelect, currentHtml, previewRef }: TemplateModalProps) => {
   const [storedTemplates, setStoredTemplates] = useLocalStorage<Template[]>('email-templates', []);
   const [templates, setTemplates] = useState<Template[]>([]);
   const [searchTerm, setSearchTerm] = useState('');
@@ -73,25 +74,21 @@ export const TemplateModal = ({ isOpen, onClose, onSelect, currentHtml }: Templa
   const [newTemplateCategory, setNewTemplateCategory] = useState('email');
   const [editingTemplate, setEditingTemplate] = useState<Template | null>(null);
 
-  // Initialize with default templates if none exist
   useEffect(() => {
     if (storedTemplates.length === 0) {
       setStoredTemplates([...defaultTemplates]);
     }
   }, [storedTemplates.length, setStoredTemplates]);
 
-  // Update templates when stored templates change or search term changes
   useEffect(() => {
     let filteredTemplates = [...storedTemplates];
     
-    // Filter by search term
     if (searchTerm) {
       filteredTemplates = filteredTemplates.filter(template => 
         template.name.toLowerCase().includes(searchTerm.toLowerCase())
       );
     }
     
-    // Filter by category tab
     if (activeTab !== 'all') {
       filteredTemplates = filteredTemplates.filter(template => 
         template.category === activeTab
@@ -101,11 +98,48 @@ export const TemplateModal = ({ isOpen, onClose, onSelect, currentHtml }: Templa
     setTemplates(filteredTemplates);
   }, [storedTemplates, searchTerm, activeTab]);
 
+  const captureTemplateThumbnail = (): string => {
+    if (previewRef?.current) {
+      try {
+        const iframe = previewRef.current.getIframeRef().current;
+        const iframeDocument = iframe.contentDocument || iframe.contentWindow?.document;
+        
+        if (iframeDocument) {
+          const tempCanvas = document.createElement('canvas');
+          const context = tempCanvas.getContext('2d');
+          
+          if (context) {
+            const scale = 0.3;
+            const width = iframe.clientWidth * scale;
+            const height = iframe.clientHeight * scale;
+            
+            tempCanvas.width = width;
+            tempCanvas.height = height;
+            
+            context.fillStyle = '#FFFFFF';
+            context.fillRect(0, 0, width, height);
+            
+            context.scale(scale, scale);
+            
+            const data = tempCanvas.toDataURL('image/png');
+            return data;
+          }
+        }
+      } catch (err) {
+        console.error('Error capturing thumbnail:', err);
+      }
+    }
+    
+    return '';
+  };
+
   const handleCreateTemplate = () => {
     if (!newTemplateName.trim()) {
       toast.error('Please enter a template name');
       return;
     }
+
+    const thumbnail = captureTemplateThumbnail();
 
     const newTemplate: Template = {
       id: editingTemplate ? editingTemplate.id : Date.now().toString(),
@@ -114,22 +148,20 @@ export const TemplateModal = ({ isOpen, onClose, onSelect, currentHtml }: Templa
       category: newTemplateCategory,
       createdAt: editingTemplate ? editingTemplate.createdAt : new Date().toISOString(),
       updatedAt: new Date().toISOString(),
+      thumbnail: thumbnail
     };
 
     if (editingTemplate) {
-      // Update existing template
       const updatedTemplates = storedTemplates.map(template => 
         template.id === editingTemplate.id ? newTemplate : template
       );
       setStoredTemplates(updatedTemplates);
       toast.success('Template updated successfully');
     } else {
-      // Create new template
       setStoredTemplates([...storedTemplates, newTemplate]);
       toast.success('Template saved successfully');
     }
 
-    // Reset the form
     setNewTemplateName('');
     setNewTemplateCategory('email');
     setIsCreatingTemplate(false);
@@ -139,7 +171,6 @@ export const TemplateModal = ({ isOpen, onClose, onSelect, currentHtml }: Templa
   const handleDeleteTemplate = (template: Template, event: React.MouseEvent) => {
     event.stopPropagation();
     
-    // Prevent deletion of default templates
     if (template.id.startsWith('default-')) {
       toast.error('Cannot delete default templates');
       return;
@@ -279,9 +310,19 @@ export const TemplateModal = ({ isOpen, onClose, onSelect, currentHtml }: Templa
                         onClick={() => onSelect(template)}
                       >
                         <div className="relative p-4 border-b bg-muted/50">
-                          <div className="h-24 overflow-hidden text-xs opacity-70">
-                            {template.html.substring(0, 200)}...
-                          </div>
+                          {template.thumbnail ? (
+                            <div className="h-24 overflow-hidden flex items-center justify-center">
+                              <img 
+                                src={template.thumbnail} 
+                                alt={template.name} 
+                                className="max-h-full max-w-full object-contain"
+                              />
+                            </div>
+                          ) : (
+                            <div className="h-24 overflow-hidden text-xs opacity-70">
+                              {template.html.substring(0, 200)}...
+                            </div>
+                          )}
                           {template.id.startsWith('default-') && (
                             <div className="absolute top-2 right-2 bg-blue-100 text-blue-800 text-xs px-2 py-1 rounded">
                               Default

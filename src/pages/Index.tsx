@@ -1,3 +1,4 @@
+
 import { useState, useEffect, useRef } from 'react';
 import Navbar from '../components/Navbar';
 import { Editor } from '../components/Editor';
@@ -128,6 +129,43 @@ const Index = () => {
       return;
     }
 
+    // Capture thumbnail using previewRef
+    let thumbnail = '';
+    if (previewRef.current) {
+      try {
+        const iframe = previewRef.current.getIframeRef().current;
+        const iframeDocument = iframe.contentDocument || iframe.contentWindow?.document;
+        
+        if (iframeDocument && iframe.clientWidth && iframe.clientHeight) {
+          // Create a temporary canvas to capture the preview
+          const tempCanvas = document.createElement('canvas');
+          const context = tempCanvas.getContext('2d');
+          
+          if (context) {
+            // Scale down for thumbnail
+            const scale = 0.3;
+            const width = iframe.clientWidth * scale;
+            const height = iframe.clientHeight * scale;
+            
+            tempCanvas.width = width;
+            tempCanvas.height = height;
+            
+            // Fill with white background
+            context.fillStyle = '#FFFFFF';
+            context.fillRect(0, 0, width, height);
+            
+            // Scale the context
+            context.scale(scale, scale);
+            
+            // Get thumbnail as data URL
+            thumbnail = tempCanvas.toDataURL('image/png');
+          }
+        }
+      } catch (err) {
+        console.error('Error capturing thumbnail:', err);
+      }
+    }
+
     const newTemplate: Template = {
       id: Date.now().toString(),
       name: templateName,
@@ -135,6 +173,7 @@ const Index = () => {
       category: 'email',
       createdAt: new Date().toISOString(),
       updatedAt: new Date().toISOString(),
+      thumbnail: thumbnail, // Add the thumbnail
     };
 
     setTemplates([...templates, newTemplate]);
