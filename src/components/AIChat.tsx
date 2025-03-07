@@ -187,7 +187,7 @@ const AIChat = ({
               <Button variant="outline" size="icon" onClick={() => setIsImageManagerOpen(true)} title="Insert image" className="h-8 w-8">
                 <ImagePlus className="h-3 w-3" />
               </Button>
-              <Input ref={inputRef} value={inputValue} onChange={e => setInputValue(e.target.value)} onKeyDown={handleKeyDown} placeholder={hasOpenAIKey() ? "Describe changes to make to the HTML..." : "Add OpenAI API key to start editing..."} disabled={loading} className="flex-1 h-8 text-sm text-gray-900 dark:text-gray-100 border-gray-300 dark:border-gray-700 bg-neutral-950" />
+              <Input ref={inputRef} value={inputValue} onChange={e => setInputValue(e.target.value)} onKeyDown={handleKeyDown} placeholder={hasOpenAIKey() ? "Describe changes to make to the HTML..." : "Add OpenAI API key to start editing..."} disabled={loading} className="bg-neutral-950" />
               <Button onClick={handleSendMessage} disabled={loading || !inputValue.trim()} size="icon" className="h-8 w-8">
                 {loading ? <Loader2 className="h-3 w-3 animate-spin" /> : <Send className="h-3 w-3" />}
               </Button>
