@@ -43,7 +43,7 @@ const Auth = () => {
     };
   }, [navigate]);
 
-  const handleSendCode = async () => {
+  const handleSendMagicLink = async () => {
     if (!email) {
       toast.error('Please enter your email address');
       return;
@@ -62,8 +62,8 @@ const Auth = () => {
         throw error;
       }
 
+      toast.success('Check your email for the magic link');
       setShowOtpInput(true);
-      toast.success('Check your email for the login code');
     } catch (error: any) {
       toast.error(error.message || 'An error occurred');
       console.error('Auth error:', error);
@@ -74,7 +74,7 @@ const Auth = () => {
 
   const handleVerifyOtp = async () => {
     if (!otp || !email) {
-      toast.error('Please enter the secret code sent to your email');
+      toast.error('Please enter the verification code sent to your email');
       return;
     }
 
@@ -90,40 +90,10 @@ const Auth = () => {
         throw error;
       }
 
-      // User should be redirected by the auth state change listener
       toast.success('Authentication successful');
     } catch (error: any) {
       toast.error(error.message || 'Invalid code');
       console.error('OTP verification error:', error);
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  const handleSignUp = async () => {
-    if (!email) {
-      toast.error('Please enter your email address');
-      return;
-    }
-
-    setLoading(true);
-    try {
-      const { error } = await supabase.auth.signInWithOtp({
-        email,
-        options: {
-          emailRedirectTo: window.location.origin,
-        },
-      });
-
-      if (error) {
-        throw error;
-      }
-
-      setShowOtpInput(true);
-      toast.success('Check your email for the signup code');
-    } catch (error: any) {
-      toast.error(error.message || 'An error occurred');
-      console.error('Signup error:', error);
     } finally {
       setLoading(false);
     }
@@ -146,99 +116,109 @@ const Auth = () => {
             </TabsList>
             
             <TabsContent value="login" className="space-y-4">
-              {!showOtpInput ? (
-                <div className="space-y-4">
-                  <div className="space-y-2">
-                    <Label htmlFor="email">Email</Label>
-                    <Input
-                      id="email"
-                      type="email"
-                      placeholder="your.email@example.com"
-                      value={email}
-                      onChange={(e) => setEmail(e.target.value)}
-                      disabled={loading}
-                    />
-                  </div>
+              <div className="space-y-4">
+                <div className="space-y-2">
+                  <Label htmlFor="email">Email</Label>
+                  <Input
+                    id="email"
+                    type="email"
+                    placeholder="your.email@example.com"
+                    value={email}
+                    onChange={(e) => setEmail(e.target.value)}
+                    disabled={loading}
+                  />
+                </div>
+                {!showOtpInput ? (
                   <Button 
                     className="w-full" 
-                    onClick={handleSendCode}
+                    onClick={handleSendMagicLink}
                     disabled={loading}
                   >
                     {loading && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
                     Send Magic Link
                   </Button>
-                </div>
-              ) : (
-                <div className="space-y-4">
-                  <div className="space-y-2">
-                    <Label htmlFor="otp">Enter the code from your email</Label>
-                    <Input
-                      id="otp"
-                      type="text"
-                      placeholder="Your secret code"
-                      value={otp}
-                      onChange={(e) => setOtp(e.target.value)}
+                ) : (
+                  <>
+                    <div className="space-y-2">
+                      <Label htmlFor="otp">Enter the verification code from your email (if provided)</Label>
+                      <Input
+                        id="otp"
+                        type="text"
+                        placeholder="Your verification code"
+                        value={otp}
+                        onChange={(e) => setOtp(e.target.value)}
+                        disabled={loading}
+                      />
+                    </div>
+                    <Button 
+                      className="w-full" 
+                      onClick={handleVerifyOtp}
                       disabled={loading}
-                    />
-                  </div>
-                  <Button 
-                    className="w-full" 
-                    onClick={handleVerifyOtp}
-                    disabled={loading}
-                  >
-                    {loading && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
-                    Verify Code
-                  </Button>
-                </div>
-              )}
+                    >
+                      {loading && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+                      Verify Code
+                    </Button>
+                    <div className="text-center mt-2">
+                      <p className="text-sm text-muted-foreground">
+                        You can also click the link in your email to login automatically
+                      </p>
+                    </div>
+                  </>
+                )}
+              </div>
             </TabsContent>
             
             <TabsContent value="signup" className="space-y-4">
-              {!showOtpInput ? (
-                <div className="space-y-4">
-                  <div className="space-y-2">
-                    <Label htmlFor="signup-email">Email</Label>
-                    <Input
-                      id="signup-email"
-                      type="email"
-                      placeholder="your.email@example.com"
-                      value={email}
-                      onChange={(e) => setEmail(e.target.value)}
-                      disabled={loading}
-                    />
-                  </div>
+              <div className="space-y-4">
+                <div className="space-y-2">
+                  <Label htmlFor="signup-email">Email</Label>
+                  <Input
+                    id="signup-email"
+                    type="email"
+                    placeholder="your.email@example.com"
+                    value={email}
+                    onChange={(e) => setEmail(e.target.value)}
+                    disabled={loading}
+                  />
+                </div>
+                {!showOtpInput ? (
                   <Button 
                     className="w-full" 
-                    onClick={handleSignUp}
+                    onClick={handleSendMagicLink}
                     disabled={loading}
                   >
                     {loading && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
                     Create Account
                   </Button>
-                </div>
-              ) : (
-                <div className="space-y-4">
-                  <div className="space-y-2">
-                    <Label htmlFor="signup-otp">Enter the code from your email</Label>
-                    <Input
-                      id="signup-otp"
-                      type="text"
-                      placeholder="Your secret code"
-                      value={otp}
-                      onChange={(e) => setOtp(e.target.value)}
+                ) : (
+                  <>
+                    <div className="space-y-2">
+                      <Label htmlFor="signup-otp">Enter the verification code from your email (if provided)</Label>
+                      <Input
+                        id="signup-otp"
+                        type="text"
+                        placeholder="Your verification code"
+                        value={otp}
+                        onChange={(e) => setOtp(e.target.value)}
+                        disabled={loading}
+                      />
+                    </div>
+                    <Button 
+                      className="w-full" 
+                      onClick={handleVerifyOtp}
                       disabled={loading}
-                    />
-                  </div>
-                  <Button 
-                    className="w-full" 
-                    onClick={handleVerifyOtp}
-                    disabled={loading}
-                  >
-                    {loading && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
-                    Verify Code
-                  </Button>
-                </div>
-              )}
+                    >
+                      {loading && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+                      Verify Code
+                    </Button>
+                    <div className="text-center mt-2">
+                      <p className="text-sm text-muted-foreground">
+                        You can also click the link in your email to sign up automatically
+                      </p>
+                    </div>
+                  </>
+                )}
+              </div>
             </TabsContent>
           </Tabs>
         </CardContent>
