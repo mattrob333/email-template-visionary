@@ -11,6 +11,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { exportAsPdf } from '../utils/exportUtils';
+import { saveTemplate as saveTemplateToSupabase } from '../services/templateService';
 
 const initialTemplate = `<!DOCTYPE html>
 <html>
@@ -138,7 +139,7 @@ const Index = () => {
     setIsDialogOpen(true);
   };
 
-  const saveTemplate = () => {
+  const saveTemplate = async () => {
     if (!templateName.trim()) {
       toast.error('Please enter a template name');
       return;
@@ -160,9 +161,27 @@ const Index = () => {
     };
 
     setTemplates([...templates, newTemplate]);
+    
+    try {
+      const savedTemplate = await saveTemplateToSupabase({
+        name: templateName,
+        html: htmlContent,
+        category: 'email',
+        thumbnail: thumbnail
+      });
+      
+      if (savedTemplate) {
+        toast.success('Template saved to cloud successfully!');
+      } else {
+        toast.warning('Template saved locally only. Could not save to cloud.');
+      }
+    } catch (error) {
+      console.error('Error saving to Supabase:', error);
+      toast.warning('Template saved locally only. Could not save to cloud.');
+    }
+    
     setIsDialogOpen(false);
     setTemplateName('');
-    toast.success('Template saved successfully!');
   };
 
   const loadTemplate = (template: Template) => {
