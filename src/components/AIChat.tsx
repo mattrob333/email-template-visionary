@@ -1,3 +1,4 @@
+
 import { useState, useRef, useEffect } from 'react';
 import { Send, Bot, User, RefreshCcw, Shield, Loader2, Code, GripHorizontal, ImagePlus } from 'lucide-react';
 import { Button } from "@/components/ui/button";
@@ -19,6 +20,8 @@ type Message = {
   timestamp: Date;
 };
 
+const DEFAULT_CHAT_HEIGHT = 320; // Increased default height
+
 const AIChat = ({
   htmlContent,
   onUpdateHtml
@@ -32,7 +35,7 @@ const AIChat = ({
   const [loading, setLoading] = useState(false);
   const [isKeyDialogOpen, setIsKeyDialogOpen] = useState(false);
   const [showVariables, setShowVariables] = useState(false);
-  const [chatHeight, setChatHeight] = useState(250);
+  const [chatHeight, setChatHeight] = useState(DEFAULT_CHAT_HEIGHT);
   const [isImageManagerOpen, setIsImageManagerOpen] = useState(false);
   
   const messagesEndRef = useRef<HTMLDivElement>(null);
@@ -72,7 +75,7 @@ const AIChat = ({
       const deltaY = startYRef.current - e.clientY;
       
       // Calculate new height (increase when moving up, decrease when moving down)
-      const newHeight = Math.max(150, Math.min(500, startHeightRef.current + deltaY));
+      const newHeight = Math.max(150, Math.min(600, startHeightRef.current + deltaY));
       
       setChatHeight(newHeight);
       

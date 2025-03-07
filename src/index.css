@@ -1,3 +1,4 @@
+
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
@@ -87,14 +88,18 @@
 }
 
 .chat-resize-handle {
-  @apply w-full h-3 bg-border/50 cursor-row-resize flex justify-center items-center;
+  @apply w-full h-4 bg-border/50 cursor-row-resize flex justify-center items-center;
   transition: background-color 0.2s ease, height 0.2s ease;
   position: relative;
-  z-index: 20;
+  z-index: 30;
 }
 
 .chat-resize-handle:hover {
-  @apply bg-primary/40 h-4;
+  @apply bg-primary/60 h-5;
+}
+
+.chat-resize-handle:active {
+  @apply bg-primary/80;
 }
 
 .chat-resize-handle-icon {
@@ -149,7 +154,7 @@
   position: relative;
   overflow: hidden;
   min-height: 150px;
-  max-height: 500px;
+  max-height: 600px; /* Increased max height to match the red box area */
   transition: height 0.2s ease;
 }
 
