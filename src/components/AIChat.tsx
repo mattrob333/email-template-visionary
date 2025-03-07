@@ -262,7 +262,7 @@ const VariableManager = ({
             </p>
             {Object.entries(variables).map(([name, value]) => <div key={name} className="space-y-2">
                 <label className="text-sm font-medium">{name}:</label>
-                <Input value={value} onChange={e => handleVariableChange(name, e.target.value)} placeholder={`Enter value for ${name}`} />
+                <Input value={value} onChange={e => handleVariableChange(name, e.target.value)} placeholder={`Enter value for ${name}`} className="bg-neutral-950" />
               </div>)}
             <div className="flex space-x-2 pt-2">
               <Button onClick={applyVariables} variant="secondary" size="sm">
