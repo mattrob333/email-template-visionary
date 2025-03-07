@@ -181,6 +181,7 @@ const Navbar = ({
         isOpen={isTemplateModalOpen} 
         onClose={() => setIsTemplateModalOpen(false)}
         onSelect={onLoadTemplate}
+        currentHtml={htmlContent}
       />
       
       <TemplateSelector

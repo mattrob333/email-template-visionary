@@ -1,40 +1,33 @@
 
 import { useState, useRef, useEffect } from 'react';
-import { Editor as TinyMCEEditor } from '@tinymce/tinymce-react';
 import { Button } from "@/components/ui/button";
 import { TemplateModal, Template } from './TemplateModal';
 import TemplateSelector from './TemplateSelector';
 import { toast } from 'sonner';
 import { Save, FileDown, FileUp, Code, Layout } from 'lucide-react';
 
-export const Editor = () => {
+interface EditorProps {
+  value: string;
+  onChange: (content: string) => void;
+  isDarkMode: boolean;
+}
+
+export const Editor = ({ value, onChange, isDarkMode }: EditorProps) => {
   const [isTemplateModalOpen, setIsTemplateModalOpen] = useState(false);
   const [isTemplateSelectorOpen, setIsTemplateSelectorOpen] = useState(false);
-  const [editorContent, setEditorContent] = useState('');
-  const editorRef = useRef<TinyMCEEditor | null>(null);
-
-  const getCurrentHtml = (): string => {
-    return editorContent;
-  };
-
-  const handleEditorChange = (content: string) => {
-    setEditorContent(content);
-  };
+  const textareaRef = useRef<HTMLTextAreaElement>(null);
 
   const handleSaveClick = () => {
     setIsTemplateModalOpen(true);
   };
 
   const handleTemplateSelect = (template: Template) => {
-    if (editorRef.current) {
-      editorRef.current.setContent(template.html);
-      toast.success('Template loaded successfully');
-    }
+    onChange(template.html);
+    toast.success('Template loaded successfully');
   };
 
   const handleExportHtml = () => {
-    const content = editorContent;
-    const blob = new Blob([content], { type: 'text/html' });
+    const blob = new Blob([value], { type: 'text/html' });
     const url = URL.createObjectURL(blob);
     const a = document.createElement('a');
     a.href = url;
@@ -52,18 +45,15 @@ export const Editor = () => {
       const reader = new FileReader();
       reader.onload = (e) => {
         const content = e.target?.result as string;
-        if (editorRef.current) {
-          editorRef.current.setContent(content);
-          toast.success('HTML imported successfully');
-        }
+        onChange(content);
+        toast.success('HTML imported successfully');
       };
       reader.readAsText(file);
     }
   };
 
   const handleViewSource = () => {
-    const content = editorContent;
-    const formatted = content.replace(/></g, '>\n<');
+    const formatted = value.replace(/></g, '>\n<');
     console.log(formatted);
     toast.success('HTML source code logged to console');
   };
@@ -124,24 +114,15 @@ export const Editor = () => {
         </div>
       </div>
 
-      <div className="flex-1 min-h-0">
-        <TinyMCEEditor
-          ref={editorRef}
-          init={{
-            height: '100%',
-            menubar: true,
-            plugins: [
-              'advlist', 'autolink', 'lists', 'link', 'image', 'charmap', 'preview',
-              'anchor', 'searchreplace', 'visualblocks', 'code', 'fullscreen',
-              'insertdatetime', 'media', 'table', 'code', 'help', 'wordcount'
-            ],
-            toolbar: 'undo redo | blocks | ' +
-              'bold italic forecolor | alignleft aligncenter ' +
-              'alignright alignjustify | bullist numlist outdent indent | ' +
-              'removeformat | help',
-            content_style: 'body { font-family:Helvetica,Arial,sans-serif; font-size:14px }'
-          }}
-          onEditorChange={handleEditorChange}
+      <div className="flex-1 min-h-0 overflow-auto">
+        <textarea
+          ref={textareaRef}
+          value={value}
+          onChange={(e) => onChange(e.target.value)}
+          className={`w-full h-full p-4 font-mono text-sm resize-none focus:outline-none focus:ring-1 focus:ring-primary/30 ${
+            isDarkMode ? 'bg-card text-foreground' : 'bg-white text-black'
+          }`}
+          spellCheck="false"
         />
       </div>
 
@@ -149,13 +130,20 @@ export const Editor = () => {
         isOpen={isTemplateModalOpen}
         onClose={() => setIsTemplateModalOpen(false)}
         onSelect={handleTemplateSelect}
-        currentHtml={getCurrentHtml()}
+        currentHtml={value}
       />
 
       <TemplateSelector
         isOpen={isTemplateSelectorOpen}
         onClose={() => setIsTemplateSelectorOpen(false)}
-        onSelect={handleTemplateSelect}
+        onSelect={(template) => {
+          if (typeof template === 'string') {
+            onChange(template);
+          } else if (typeof template === 'object' && 'html' in template) {
+            onChange(template.html);
+          }
+          toast.success('Template loaded successfully');
+        }}
       />
     </div>
   );
