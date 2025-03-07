@@ -1,11 +1,9 @@
-
 import { useState } from 'react';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Button } from "@/components/ui/button";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Template } from './TemplateModal';
-import { LayoutGrid, Mail, Printer } from 'lucide-react';
+import { LayoutGrid, Mail, Printer, AtSign } from 'lucide-react';
 
 interface TemplateSelectorProps {
   isOpen: boolean;
@@ -19,7 +17,7 @@ const EMAIL_TEMPLATES = [
     id: 'email-newsletter',
     name: 'Newsletter',
     description: 'Clean newsletter layout with header, content sections, and footer',
-    previewSrc: 'template-email-newsletter.png',
+    previewSrc: '/template-email-newsletter.png',
     html: `<!DOCTYPE html>
 <html>
 <head>
@@ -96,7 +94,7 @@ const EMAIL_TEMPLATES = [
     id: 'email-announcement',
     name: 'Announcement',
     description: 'Bold announcement layout for product launches or events',
-    previewSrc: 'template-email-announcement.png',
+    previewSrc: '/template-email-announcement.png',
     html: `<!DOCTYPE html>
 <html>
 <head>
@@ -194,7 +192,7 @@ const EMAIL_TEMPLATES = [
     id: 'email-promotional',
     name: 'Promotional',
     description: 'Effective promotional email design with clear call-to-action',
-    previewSrc: 'template-email-promotional.png',
+    previewSrc: '/template-email-promotional.png',
     html: `<!DOCTYPE html>
 <html>
 <head>
@@ -313,7 +311,7 @@ const PRINT_TEMPLATES = [
     id: 'flyer-event',
     name: 'Event Flyer',
     description: 'Perfect for promoting upcoming events and gatherings',
-    previewSrc: 'template-print-event.png',
+    previewSrc: '/template-print-event.png',
     html: `<!DOCTYPE html>
 <html>
 <head>
@@ -485,7 +483,7 @@ const PRINT_TEMPLATES = [
     id: 'flyer-business',
     name: 'Business Flyer',
     description: 'Professional layout for business services and promotions',
-    previewSrc: 'template-print-business.png',
+    previewSrc: '/template-print-business.png',
     html: `<!DOCTYPE html>
 <html>
 <head>
@@ -668,7 +666,7 @@ const PRINT_TEMPLATES = [
     id: 'flyer-product',
     name: 'Product Showcase',
     description: 'Highlight product features with visual emphasis',
-    previewSrc: 'template-print-product.png',
+    previewSrc: '/template-print-product.png',
     html: `<!DOCTYPE html>
 <html>
 <head>
@@ -873,93 +871,48 @@ const PRINT_TEMPLATES = [
   }
 ];
 
-const TemplateSelector = ({ isOpen, onClose, onSelect }: TemplateSelectorProps) => {
-  const [activeTab, setActiveTab] = useState<string>('email');
-  
-  const handleSelect = (html: string) => {
-    onSelect(html);
-    onClose();
-  };
-  
-  return (
-    <Dialog open={isOpen} onOpenChange={(open) => !open && onClose()}>
-      <DialogContent className="sm:max-w-[800px] max-h-[80vh] overflow-hidden flex flex-col animate-fade-in">
-        <DialogHeader>
-          <DialogTitle className="text-xl flex items-center gap-2">
-            <LayoutGrid className="h-5 w-5" />
-            Template Gallery
-          </DialogTitle>
-        </DialogHeader>
+// New Gmail signature templates
+const SIGNATURE_TEMPLATES = [
+  {
+    id: 'signature-basic',
+    name: 'Professional Basic',
+    description: 'Clean, professional signature with contact details',
+    previewSrc: '/signature-basic.png',
+    html: `<div style="font-family: Arial, sans-serif; max-width: 500px; color: #333333;">
+  <table cellpadding="0" cellspacing="0" style="border-collapse: collapse; width: 100%;">
+    <tr>
+      <td style="padding-bottom: 10px; border-bottom: 2px solid #3b82f6;">
+        <p style="font-size: 16px; margin: 0; font-weight: bold;">John Smith</p>
+        <p style="font-size: 14px; margin: 0; color: #666666;">Marketing Director</p>
+      </td>
+    </tr>
+    <tr>
+      <td style="padding-top: 10px; font-size: 12px;">
+        <p style="margin: 0; line-height: 1.5;">
+          <span style="color: #3b82f6; font-weight: bold;">Email:</span> john.smith@company.com<br>
+          <span style="color: #3b82f6; font-weight: bold;">Phone:</span> (555) 123-4567<br>
+          <span style="color: #3b82f6; font-weight: bold;">Website:</span> <a href="https://www.company.com" style="color: #3b82f6; text-decoration: none;">www.company.com</a>
+        </p>
+      </td>
+    </tr>
+  </table>
+</div>`
+  },
+  {
+    id: 'signature-with-photo',
+    name: 'With Photo',
+    description: 'Professional signature with photo and social media icons',
+    previewSrc: '/signature-with-photo.png',
+    html: `<div style="font-family: Arial, sans-serif; max-width: 500px; color: #333333;">
+  <table cellpadding="0" cellspacing="0" style="border-collapse: collapse; width: 100%;">
+    <tr>
+      <td style="vertical-align: top; width: 100px;">
+        <img src="https://via.placeholder.com/100" alt="Profile Photo" style="width: 80px; height: 80px; border-radius: 50%;">
+      </td>
+      <td style="vertical-align: top; padding-left: 15px;">
+        <p style="font-size: 18px; margin: 0; font-weight: bold; color: #2563eb;">Jane Wilson</p>
+        <p style="font-size: 14px; margin: 0 0 10px 0; color: #666666;">Senior Developer</p>
         
-        <Tabs defaultValue="email" value={activeTab} onValueChange={setActiveTab}>
-          <TabsList className="grid w-full grid-cols-2">
-            <TabsTrigger value="email" className="flex items-center">
-              <Mail className="h-4 w-4 mr-2" />
-              Email Templates
-            </TabsTrigger>
-            <TabsTrigger value="print" className="flex items-center">
-              <Printer className="h-4 w-4 mr-2" />
-              Print Templates
-            </TabsTrigger>
-          </TabsList>
-          
-          <TabsContent value="email" className="mt-6">
-            <ScrollArea className="h-[450px]">
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-6 pb-4">
-                {EMAIL_TEMPLATES.map((template) => (
-                  <div 
-                    key={template.id}
-                    className="border rounded-lg overflow-hidden hover:border-primary transition-all cursor-pointer hover:shadow-md"
-                    onClick={() => handleSelect(template.html)}
-                  >
-                    <div className="aspect-[4/3] bg-muted relative overflow-hidden">
-                      {/* In a real app, use actual preview images */}
-                      <div className="w-full h-full flex items-center justify-center text-muted-foreground bg-muted/50">
-                        <Mail className="h-12 w-12 opacity-20" />
-                      </div>
-                    </div>
-                    <div className="p-4">
-                      <h3 className="font-medium">{template.name}</h3>
-                      <p className="text-sm text-muted-foreground mt-1">
-                        {template.description}
-                      </p>
-                    </div>
-                  </div>
-                ))}
-              </div>
-            </ScrollArea>
-          </TabsContent>
-          
-          <TabsContent value="print" className="mt-6">
-            <ScrollArea className="h-[450px]">
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-6 pb-4">
-                {PRINT_TEMPLATES.map((template) => (
-                  <div 
-                    key={template.id}
-                    className="border rounded-lg overflow-hidden hover:border-primary transition-all cursor-pointer hover:shadow-md"
-                    onClick={() => handleSelect(template.html)}
-                  >
-                    <div className="aspect-[3/4] bg-muted relative overflow-hidden">
-                      {/* In a real app, use actual preview images */}
-                      <div className="w-full h-full flex items-center justify-center text-muted-foreground bg-muted/50">
-                        <Printer className="h-12 w-12 opacity-20" />
-                      </div>
-                    </div>
-                    <div className="p-4">
-                      <h3 className="font-medium">{template.name}</h3>
-                      <p className="text-sm text-muted-foreground mt-1">
-                        {template.description}
-                      </p>
-                    </div>
-                  </div>
-                ))}
-              </div>
-            </ScrollArea>
-          </TabsContent>
-        </Tabs>
-      </DialogContent>
-    </Dialog>
-  );
-};
-
-export default TemplateSelector;
+        <p style="font-size: 12px; margin: 0; line-height: 1.5;">
+          <span style="color: #2563eb; font-weight: bold;">Email:</span> jane.wilson@techcompany.com<br>
+          <span style="color: #2563eb; font-weight: bold;">Phone:</span> (

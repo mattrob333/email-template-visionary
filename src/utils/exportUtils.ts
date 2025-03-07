@@ -1,4 +1,3 @@
-
 import React from 'react';
 
 /**
@@ -54,14 +53,8 @@ export const copyRenderedContent = async (iframeRef: React.RefObject<HTMLIFrameE
     // Get the HTML content as a string
     const htmlContent = iframeDocument.documentElement.outerHTML;
     
-    // Create a blob with HTML content
-    const blob = new Blob([htmlContent], { type: 'text/html' });
-    
-    // Create a ClipboardItem with HTML content
-    const data = [new ClipboardItem({ 'text/html': blob })];
-    
-    // Use the clipboard API to write the HTML content
-    await navigator.clipboard.write(data);
+    // Use writeText instead of ClipboardItem for better compatibility
+    await navigator.clipboard.writeText(htmlContent);
     return true;
   } catch (err) {
     console.error('Failed to copy rendered content: ', err);

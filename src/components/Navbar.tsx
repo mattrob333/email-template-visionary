@@ -10,32 +10,26 @@ import {
   Moon,
   FileDown,
   Image,
-  Paintbrush,
-  Printer,
-  ToggleLeft,
-  ToggleRight
+  Loader2
 } from "lucide-react";
-import { copyToClipboard, copyRenderedContent, exportAsPdf } from '../utils/exportUtils';
+import { copyToClipboard, copyRenderedContent } from '../utils/exportUtils';
 import { toast } from 'sonner';
-import { TemplateModal, Template } from './TemplateModal';
-import PrintOptions, { PrintSettings } from './PrintOptions';
+import { TemplateModal } from './TemplateModal';
 import TemplateSelector from './TemplateSelector';
 import ImageManager from './ImageManager';
-import ColorPicker from './ColorPicker';
 
 interface NavbarProps {
   htmlContent: string;
   isDarkMode: boolean;
   toggleDarkMode: () => void;
   onSaveTemplate: () => void;
-  onLoadTemplate: () => void;
+  onLoadTemplate: (template: any) => void;
   onLoadNewTemplate: (html: string) => void;
   onInsertImage: (imageHtml: string) => void;
   previewRef: React.RefObject<any>;
   previewMode: 'email' | 'print';
-  togglePreviewMode: () => void;
-  onExportPdf: (options: PrintSettings) => void;
-  onColorSelect: (color: string) => void;
+  onExportPdf: () => void;
+  isExporting?: boolean;
 }
 
 const Navbar = ({ 
@@ -47,16 +41,12 @@ const Navbar = ({
   onLoadNewTemplate,
   onInsertImage,
   previewRef,
-  previewMode,
-  togglePreviewMode,
   onExportPdf,
-  onColorSelect
+  isExporting = false
 }: NavbarProps) => {
   const [isTemplateModalOpen, setIsTemplateModalOpen] = useState(false);
-  const [isPrintOptionsOpen, setIsPrintOptionsOpen] = useState(false);
   const [isTemplateSelectorOpen, setIsTemplateSelectorOpen] = useState(false);
   const [isImageManagerOpen, setIsImageManagerOpen] = useState(false);
-  const [isColorPickerOpen, setIsColorPickerOpen] = useState(false);
 
   const handleCopyForGmail = async () => {
     if (!previewRef.current) {
@@ -72,10 +62,6 @@ const Navbar = ({
     }
   };
 
-  const handleExportPdf = () => {
-    setIsPrintOptionsOpen(true);
-  };
-
   return (
     <>
       <header className="w-full border-b border-border/40 bg-background/95 backdrop-blur-sm supports-backdrop-blur:bg-background/60 z-10">
@@ -83,30 +69,11 @@ const Navbar = ({
           <div className="flex items-center gap-2">
             <Mail className="h-6 w-6 text-primary" />
             <h1 className="text-xl font-semibold tracking-tight">
-              HTML {previewMode === 'email' ? 'Email' : 'Flyer'} Designer
+              HTML Email Designer
             </h1>
           </div>
           
-          <div className="flex items-center gap-3">
-            <Button 
-              variant="outline" 
-              size="sm" 
-              className="transition-all-fast"
-              onClick={togglePreviewMode}
-            >
-              {previewMode === 'email' ? (
-                <>
-                  <Printer className="mr-2 h-4 w-4" />
-                  Switch to Print Mode
-                </>
-              ) : (
-                <>
-                  <Mail className="mr-2 h-4 w-4" />
-                  Switch to Email Mode
-                </>
-              )}
-            </Button>
-            
+          <div className="flex items-center gap-4">
             <Button 
               variant="outline" 
               size="sm" 
@@ -131,43 +98,36 @@ const Navbar = ({
               variant="outline" 
               size="sm" 
               className="transition-all-fast"
-              onClick={() => setIsColorPickerOpen(true)}
-            >
-              <Paintbrush className="mr-2 h-4 w-4" />
-              Colors
-            </Button>
-            
-            <Button 
-              variant="outline" 
-              size="sm" 
-              className="transition-all-fast"
               onClick={onSaveTemplate}
             >
               <Save className="mr-2 h-4 w-4" />
               Save
             </Button>
-            
-            {previewMode === 'email' ? (
-              <Button 
-                variant="outline" 
-                size="sm" 
-                className="transition-all-fast"
-                onClick={handleCopyForGmail}
-              >
-                <Copy className="mr-2 h-4 w-4" />
-                Copy for Gmail
-              </Button>
-            ) : (
-              <Button 
-                variant="outline" 
-                size="sm" 
-                className="transition-all-fast"
-                onClick={handleExportPdf}
-              >
+
+            <Button 
+              variant="outline" 
+              size="sm" 
+              className="transition-all-fast"
+              onClick={handleCopyForGmail}
+            >
+              <Copy className="mr-2 h-4 w-4" />
+              Copy for Gmail
+            </Button>
+
+            <Button 
+              variant="outline" 
+              size="sm" 
+              className="transition-all-fast"
+              onClick={onExportPdf}
+              disabled={isExporting}
+            >
+              {isExporting ? (
+                <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+              ) : (
                 <FileDown className="mr-2 h-4 w-4" />
-                Export PDF
-              </Button>
-            )}
+              )}
+              Export PDF
+            </Button>
             
             <Button
               variant="ghost" 
@@ -192,12 +152,6 @@ const Navbar = ({
         onSelect={onLoadTemplate}
       />
       
-      <PrintOptions
-        isOpen={isPrintOptionsOpen}
-        onClose={() => setIsPrintOptionsOpen(false)}
-        onExport={onExportPdf}
-      />
-      
       <TemplateSelector
         isOpen={isTemplateSelectorOpen}
         onClose={() => setIsTemplateSelectorOpen(false)}
@@ -208,14 +162,6 @@ const Navbar = ({
         isOpen={isImageManagerOpen}
         onClose={() => setIsImageManagerOpen(false)}
         onInsertImage={onInsertImage}
-      />
-      
-      <ColorPicker
-        isOpen={isColorPickerOpen}
-        onClose={() => setIsColorPickerOpen(false)}
-        onSelectColor={onColorSelect}
-        initialColor="#3b82f6"
-        isPrintMode={previewMode === 'print'}
       />
     </>
   );

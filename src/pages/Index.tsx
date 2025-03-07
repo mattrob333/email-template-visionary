@@ -1,3 +1,4 @@
+
 import { useState, useEffect, useRef } from 'react';
 import Navbar from '../components/Navbar';
 import Editor from '../components/Editor';
@@ -95,6 +96,7 @@ const Index = () => {
   const [paperSize, setPaperSize] = useState<'letter' | 'a4'>('letter');
   const [orientation, setOrientation] = useState<'portrait' | 'landscape'>('portrait');
   const [showGuides, setShowGuides] = useState(false);
+  const [isExporting, setIsExporting] = useState(false);
   
   const containerRef = useRef<HTMLDivElement>(null);
   const resizeHandleRef = useRef<HTMLDivElement>(null);
@@ -147,10 +149,6 @@ const Index = () => {
     toast.success(`Loaded template: ${template.name}`);
   };
   
-  const togglePreviewMode = () => {
-    setPreviewMode(prev => prev === 'email' ? 'print' : 'email');
-  };
-  
   const handleInsertImage = (imageHtml: string) => {
     setHtmlContent(prev => prev + imageHtml);
     toast.success('Image inserted into template');
@@ -165,25 +163,36 @@ const Index = () => {
     toast.success(`Color ${color} selected`);
   };
   
-  const handleExportPdf = (options: PrintSettings) => {
+  const handleExportPdf = () => {
     if (!previewRef.current) {
       toast.error('Preview not available');
       return;
     }
     
-    setPaperSize(options.pageSize);
-    setOrientation(options.orientation);
+    setIsExporting(true);
+    
+    // Use US Letter size for PDF export directly
+    const options: PrintSettings = {
+      pageSize: 'letter',
+      orientation: 'portrait',
+      showGuides: false,
+      filename: 'document.pdf'
+    };
     
     exportAsPdf(previewRef.current.getIframeRef(), {
       pageSize: options.pageSize,
       orientation: options.orientation,
-      filename: options.filename || 'document.pdf'
+      filename: options.filename
     }).then(success => {
+      setIsExporting(false);
       if (success) {
         toast.success('PDF exported successfully!');
       } else {
         toast.error('Failed to export PDF');
       }
+    }).catch(() => {
+      setIsExporting(false);
+      toast.error('Failed to export PDF');
     });
   };
 
@@ -241,9 +250,8 @@ const Index = () => {
         onInsertImage={handleInsertImage}
         previewRef={previewRef}
         previewMode={previewMode}
-        togglePreviewMode={togglePreviewMode}
         onExportPdf={handleExportPdf}
-        onColorSelect={handleColorSelect}
+        isExporting={isExporting}
       />
       
       <main className="flex-1 container mx-auto p-4 pt-6">
