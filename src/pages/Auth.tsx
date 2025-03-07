@@ -18,6 +18,11 @@ const Auth = () => {
   const navigate = useNavigate();
 
   useEffect(() => {
+    // TEMPORARY: Auto-redirect to main page to bypass authentication
+    navigate('/');
+    
+    // Keep the original auth code commented out for later use
+    /*
     const checkSession = async () => {
       const { data } = await supabase.auth.getSession();
       if (data.session) {
@@ -38,6 +43,7 @@ const Auth = () => {
     return () => {
       subscription.unsubscribe();
     };
+    */
   }, [navigate]);
 
   const handleSendMagicLink = async () => {
