@@ -4,13 +4,19 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from "@/components/ui/dialog";
 import { ScrollArea } from "@/components/ui/scroll-area";
-import { Upload, Image as ImageIcon, Link, Check, RefreshCw } from 'lucide-react';
+import { Upload, Image as ImageIcon, Link, Check, RefreshCw, Copy } from 'lucide-react';
 import { toast } from 'sonner';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { Slider } from "@/components/ui/slider";
-import { getImages, saveImage, EmailImage, processImageFile, generateImageReference } from '../services/imageService';
+import { 
+  getImages, 
+  saveImage, 
+  EmailImage, 
+  processImageFile, 
+  generateImageReference 
+} from '../services/imageService';
 
 export interface ImageManagerProps {
   isOpen: boolean;
@@ -233,6 +239,18 @@ const ImageManager = ({
     if (image.height) setHeight(image.height.toString());
   };
 
+  const copyImageReference = (image: EmailImage) => {
+    const reference = generateImageReference(image);
+    navigator.clipboard.writeText(reference)
+      .then(() => {
+        toast.success(`Image reference copied: ${reference}`);
+      })
+      .catch(err => {
+        console.error('Failed to copy:', err);
+        toast.error('Failed to copy image reference');
+      });
+  };
+
   const handleDragEnter = (e: React.DragEvent) => {
     e.preventDefault();
     e.stopPropagation();
@@ -403,20 +421,36 @@ const ImageManager = ({
                   {uploadedImages.map((image) => (
                     <div 
                       key={image.id} 
-                      className={`relative rounded-md overflow-hidden cursor-pointer border-2 ${imageUrl === image.image_data ? 'border-primary' : 'border-transparent'}`} 
-                      onClick={() => selectUploadedImage(image)}
+                      className="relative rounded-md overflow-hidden border-2 border-muted"
                     >
-                      <img src={image.image_data} alt={image.name} className="w-full h-20 object-cover" />
-                      {imageUrl === image.image_data && (
-                        <div className="absolute top-1 right-1 bg-primary rounded-full p-0.5">
-                          <Check className="h-3 w-3 text-white" />
-                        </div>
-                      )}
-                      <div className="absolute bottom-0 left-0 right-0 bg-black/50 p-1">
-                        <p className="text-white text-xs truncate">
+                      <div 
+                        className={`cursor-pointer ${imageUrl === image.image_data ? 'ring-2 ring-primary' : ''}`} 
+                        onClick={() => selectUploadedImage(image)}
+                      >
+                        <img src={image.image_data} alt={image.name} className="w-full h-20 object-cover" />
+                        {imageUrl === image.image_data && (
+                          <div className="absolute top-1 right-1 bg-primary rounded-full p-0.5">
+                            <Check className="h-3 w-3 text-white" />
+                          </div>
+                        )}
+                      </div>
+                      <div className="absolute bottom-0 left-0 right-0 bg-black/50 p-1 flex justify-between items-center">
+                        <p className="text-white text-xs truncate max-w-[70%]">
                           {image.name}
                           <span className="ml-1 text-xs text-gray-300">({image.category})</span>
                         </p>
+                        <Button 
+                          variant="ghost" 
+                          size="icon" 
+                          className="h-6 w-6 p-1 text-white hover:text-primary hover:bg-transparent"
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            copyImageReference(image);
+                          }}
+                          title="Copy image reference"
+                        >
+                          <Copy className="h-4 w-4" />
+                        </Button>
                       </div>
                     </div>
                   ))}
