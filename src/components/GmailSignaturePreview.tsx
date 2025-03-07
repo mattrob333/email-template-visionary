@@ -24,19 +24,26 @@ const GmailSignaturePreview = ({ template, onSelect }: GmailSignaturePreviewProp
   };
 
   return (
-    <div className="cursor-pointer overflow-hidden transition-all duration-200 hover:shadow-md rounded-md border border-border/50 bg-card">
-      <div 
-        className="relative pb-[150%] overflow-hidden bg-muted"
-        onClick={() => onSelect(template)}
-      >
-        <div 
-          className="absolute inset-0 hover:scale-105 transition-transform duration-200"
-          style={{
-            backgroundImage: `url(${template.thumbnail})`,
-            backgroundSize: 'cover',
-            backgroundPosition: 'center',
-          }}
-        />
+    <div 
+      className="cursor-pointer overflow-hidden transition-all duration-200 hover:shadow-md rounded-md border border-border/50 bg-card h-full"
+      onClick={() => onSelect(template)}
+    >
+      <div className="relative pb-[56.25%] overflow-hidden bg-muted">
+        {template.thumbnail ? (
+          <div 
+            className="absolute inset-0 hover:scale-105 transition-transform duration-200"
+            style={{
+              backgroundImage: `url(${template.thumbnail})`,
+              backgroundSize: 'cover',
+              backgroundPosition: 'center',
+            }}
+          />
+        ) : (
+          <div 
+            className="absolute inset-0 flex items-center justify-center p-4 text-xs text-muted-foreground"
+            dangerouslySetInnerHTML={{ __html: template.html.substring(0, 150) + '...' }}
+          />
+        )}
       </div>
       <div className="p-3 flex justify-between items-center">
         <h3 className="font-medium text-card-foreground">{template.name}</h3>
