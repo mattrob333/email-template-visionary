@@ -256,7 +256,7 @@ const Index = () => {
         toggleAIChat={toggleAIChat}
       />
       
-      <main className="flex-1 container mx-auto p-4 pt-6">
+      <main className="flex-1 container mx-auto p-4 pt-6 xl:max-w-[1600px] 2xl:max-w-[1800px]">
         <div className="editor-container rounded-lg overflow-hidden glass-panel" ref={containerRef}>
           <div className="flex h-full">
             <div 

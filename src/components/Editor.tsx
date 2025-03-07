@@ -49,10 +49,10 @@ export const Editor = ({ value, onChange, isDarkMode }: EditorProps) => {
         color: "#61AFEF"
       },
       // Text content in bright green - more visible
-      ".cm-content .cm-text": {
+      ".cm-text": {
         color: "#98C379"
       },
-      // Special emphasis for content text inside tags
+      // Special emphasis for content
       ".cm-content": {
         color: "#E06C75"
       },

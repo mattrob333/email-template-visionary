@@ -90,7 +90,7 @@ const AIChat = ({ htmlContent, onUpdateHtml }: AIChatProps) => {
 
   return (
     <div className="flex flex-col h-full bg-background border-r border-border/40">
-      <div className="p-4 border-b border-border/40">
+      <div className="p-4 border-b border-border/40 bg-black/10">
         <h2 className="text-lg font-semibold flex items-center">
           <Bot className="mr-2 h-5 w-5" />
           AI Assistant
@@ -135,7 +135,7 @@ const AIChat = ({ htmlContent, onUpdateHtml }: AIChatProps) => {
             </div>
           </ScrollArea>
           
-          <div className="p-4 border-t border-border/40">
+          <div className="p-4 border-t border-border/40 bg-black/5">
             <div className="flex space-x-2">
               <Button 
                 variant="outline" 
