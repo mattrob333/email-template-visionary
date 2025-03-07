@@ -1,9 +1,12 @@
+
 import { useState } from 'react';
-import { Moon, Sun, Save, FileCode, Image, FileText, Menu } from 'lucide-react';
+import { Moon, Sun, Save, FileCode, Image, FileText, Menu, Copy, Mail } from 'lucide-react';
 import { Button } from "@/components/ui/button";
 import { TemplateModal } from './TemplateModal';
 import TemplateSelector from './TemplateSelector';
 import ImageManager from './ImageManager';
+import { toast } from 'sonner';
+import { copyRenderedContent } from '../utils/exportUtils';
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -42,10 +45,34 @@ const Navbar = ({
   const [isTemplateModalOpen, setIsTemplateModalOpen] = useState(false);
   const [isSelectTemplateOpen, setIsSelectTemplateOpen] = useState(false);
   const [isImageManagerOpen, setIsImageManagerOpen] = useState(false);
-  const [isPrintOptionsOpen, setIsPrintOptionsOpen] = useState(false);
+  const [isCopying, setIsCopying] = useState(false);
   
   const handleInsertImageFromModal = (imageHtml: string) => {
     onInsertImage(imageHtml);
+  };
+
+  const handleCopyForGmail = async () => {
+    if (!previewRef.current) {
+      toast.error('Preview not available');
+      return;
+    }
+    
+    setIsCopying(true);
+    
+    try {
+      const success = await copyRenderedContent(previewRef.current.getIframeRef());
+      
+      if (success) {
+        toast.success('Content copied to clipboard. Ready to paste into Gmail!');
+      } else {
+        toast.error('Failed to copy content');
+      }
+    } catch (error) {
+      toast.error('An error occurred while copying content');
+      console.error('Copy error:', error);
+    } finally {
+      setIsCopying(false);
+    }
   };
 
   return (
@@ -88,6 +115,17 @@ const Navbar = ({
               variant="outline"
               size="sm"
               className="hidden md:flex"
+              onClick={handleCopyForGmail}
+              disabled={isCopying}
+            >
+              <Copy className="h-4 w-4 mr-1" />
+              Copy for Gmail
+            </Button>
+            
+            <Button
+              variant="outline"
+              size="sm"
+              className="hidden md:flex"
               onClick={onExportPdf}
               disabled={isExporting}
             >
@@ -119,6 +157,9 @@ const Navbar = ({
                 </DropdownMenuItem>
                 <DropdownMenuItem onClick={() => setIsImageManagerOpen(true)}>
                   <Image className="h-4 w-4 mr-2" /> Insert Image
+                </DropdownMenuItem>
+                <DropdownMenuItem onClick={handleCopyForGmail} disabled={isCopying}>
+                  <Copy className="h-4 w-4 mr-2" /> Copy for Gmail
                 </DropdownMenuItem>
                 <DropdownMenuItem onClick={onExportPdf} disabled={isExporting}>
                   <FileText className="h-4 w-4 mr-2" />
