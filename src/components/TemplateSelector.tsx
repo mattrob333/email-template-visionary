@@ -1,3 +1,4 @@
+
 import { useState } from 'react';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
@@ -915,4 +916,186 @@ const SIGNATURE_TEMPLATES = [
         
         <p style="font-size: 12px; margin: 0; line-height: 1.5;">
           <span style="color: #2563eb; font-weight: bold;">Email:</span> jane.wilson@techcompany.com<br>
-          <span style="color: #2563eb; font-weight: bold;">Phone:</span> (
+          <span style="color: #2563eb; font-weight: bold;">Phone:</span> (555) 987-6543<br>
+          <span style="color: #2563eb; font-weight: bold;">LinkedIn:</span> <a href="https://linkedin.com/in/janewilson" style="color: #2563eb; text-decoration: none;">linkedin.com/in/janewilson</a>
+        </p>
+      </td>
+    </tr>
+    <tr>
+      <td colspan="2" style="padding-top: 10px;">
+        <div style="border-top: 1px solid #e5e7eb; padding-top: 10px;">
+          <a href="https://twitter.com" style="display: inline-block; margin-right: 8px;"><img src="https://via.placeholder.com/24" alt="Twitter" style="width: 24px; height: 24px;"></a>
+          <a href="https://linkedin.com" style="display: inline-block; margin-right: 8px;"><img src="https://via.placeholder.com/24" alt="LinkedIn" style="width: 24px; height: 24px;"></a>
+          <a href="https://github.com" style="display: inline-block;"><img src="https://via.placeholder.com/24" alt="GitHub" style="width: 24px; height: 24px;"></a>
+        </div>
+      </td>
+    </tr>
+  </table>
+</div>`
+  },
+  {
+    id: 'signature-corporate',
+    name: 'Corporate',
+    description: 'Professional corporate signature with logo and disclaimer',
+    previewSrc: '/signature-corporate.png',
+    html: `<div style="font-family: Arial, sans-serif; max-width: 500px; color: #333333;">
+  <table cellpadding="0" cellspacing="0" style="border-collapse: collapse; width: 100%;">
+    <tr>
+      <td style="width: 120px; vertical-align: top;">
+        <img src="https://via.placeholder.com/120x60" alt="Company Logo" style="width: 120px;">
+      </td>
+      <td style="vertical-align: top; padding-left: 15px; border-left: 3px solid #0f172a;">
+        <p style="font-size: 16px; margin: 0; font-weight: bold;">Michael Johnson</p>
+        <p style="font-size: 14px; margin: 0 0 5px 0; color: #666666;">Chief Financial Officer</p>
+        
+        <p style="font-size: 12px; margin: 0; line-height: 1.5;">
+          <span style="color: #0f172a; font-weight: bold;">Email:</span> michael.johnson@corporation.com<br>
+          <span style="color: #0f172a; font-weight: bold;">Direct:</span> (555) 123-4567<br>
+          <span style="color: #0f172a; font-weight: bold;">Office:</span> (555) 987-6543
+        </p>
+      </td>
+    </tr>
+    <tr>
+      <td colspan="2" style="padding-top: 10px; border-top: 1px solid #e5e7eb; margin-top: 10px;">
+        <p style="font-size: 11px; color: #666666; margin: 5px 0 0 0;">
+          Global Headquarters: 123 Corporate Plaza, Suite 500, New York, NY 10001
+        </p>
+        <p style="font-size: 10px; color: #999999; margin: 5px 0 0 0; font-style: italic;">
+          This email and any files transmitted with it are confidential and intended solely for the use of the individual or entity to whom they are addressed.
+        </p>
+      </td>
+    </tr>
+  </table>
+</div>`
+  },
+  {
+    id: 'signature-minimalist',
+    name: 'Minimalist',
+    description: 'Clean, simple signature with minimal styling',
+    previewSrc: '/signature-minimalist.png',
+    html: `<div style="font-family: 'Helvetica Neue', Helvetica, Arial, sans-serif; max-width: 500px; color: #333333;">
+  <p style="margin: 0; font-size: 16px; font-weight: 500;">Alex Morgan</p>
+  <p style="margin: 0; font-size: 14px; color: #666666;">Product Designer</p>
+  <p style="margin: 8px 0 0 0; font-size: 12px; color: #666666;">
+    alex@designstudio.com | (555) 234-5678
+  </p>
+  <p style="margin: 0; font-size: 12px; color: #666666;">
+    designstudio.com
+  </p>
+</div>`
+  }
+];
+
+const TemplateSelector = ({ isOpen, onClose, onSelect }: TemplateSelectorProps) => {
+  const [activeTab, setActiveTab] = useState<string>("email");
+  
+  const handleSelectTemplate = (templateHtml: string) => {
+    onSelect(templateHtml);
+    onClose();
+  };
+
+  return (
+    <Dialog open={isOpen} onOpenChange={onClose}>
+      <DialogContent className="sm:max-w-[900px] max-h-[80vh] p-0 overflow-hidden animate-fade-in">
+        <DialogHeader className="px-6 pt-6 pb-2">
+          <DialogTitle className="text-2xl">Select a Template</DialogTitle>
+        </DialogHeader>
+        
+        <Tabs defaultValue="email" value={activeTab} onValueChange={setActiveTab} className="w-full">
+          <div className="px-6">
+            <TabsList className="grid w-full grid-cols-3">
+              <TabsTrigger value="email" className="flex items-center gap-2">
+                <Mail className="h-4 w-4" />
+                <span>Email Templates</span>
+              </TabsTrigger>
+              <TabsTrigger value="print" className="flex items-center gap-2">
+                <Printer className="h-4 w-4" />
+                <span>Print Templates</span>
+              </TabsTrigger>
+              <TabsTrigger value="signature" className="flex items-center gap-2">
+                <AtSign className="h-4 w-4" />
+                <span>Gmail Signatures</span>
+              </TabsTrigger>
+            </TabsList>
+          </div>
+          
+          <ScrollArea className="h-[500px] mt-4 px-6">
+            <TabsContent value="email" className="p-0 m-0">
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 mt-4">
+                {EMAIL_TEMPLATES.map((template) => (
+                  <div 
+                    key={template.id}
+                    className="border border-border rounded-lg overflow-hidden hover:shadow-md transition-all cursor-pointer group"
+                    onClick={() => handleSelectTemplate(template.html)}
+                  >
+                    <div className="relative aspect-[3/4] overflow-hidden bg-muted">
+                      <img 
+                        src={template.previewSrc} 
+                        alt={template.name}
+                        className="w-full h-full object-cover transition-transform group-hover:scale-105"
+                      />
+                    </div>
+                    <div className="p-4">
+                      <h3 className="font-medium text-lg">{template.name}</h3>
+                      <p className="text-sm text-muted-foreground">{template.description}</p>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </TabsContent>
+            
+            <TabsContent value="print" className="p-0 m-0">
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 mt-4">
+                {PRINT_TEMPLATES.map((template) => (
+                  <div 
+                    key={template.id}
+                    className="border border-border rounded-lg overflow-hidden hover:shadow-md transition-all cursor-pointer group"
+                    onClick={() => handleSelectTemplate(template.html)}
+                  >
+                    <div className="relative aspect-[3/4] overflow-hidden bg-muted">
+                      <img 
+                        src={template.previewSrc} 
+                        alt={template.name}
+                        className="w-full h-full object-cover transition-transform group-hover:scale-105"
+                      />
+                    </div>
+                    <div className="p-4">
+                      <h3 className="font-medium text-lg">{template.name}</h3>
+                      <p className="text-sm text-muted-foreground">{template.description}</p>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </TabsContent>
+            
+            <TabsContent value="signature" className="p-0 m-0">
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mt-4">
+                {SIGNATURE_TEMPLATES.map((template) => (
+                  <div 
+                    key={template.id}
+                    className="border border-border rounded-lg overflow-hidden hover:shadow-md transition-all cursor-pointer group"
+                    onClick={() => handleSelectTemplate(template.html)}
+                  >
+                    <div className="relative aspect-[2/1] overflow-hidden bg-muted">
+                      <img 
+                        src={template.previewSrc} 
+                        alt={template.name}
+                        className="w-full h-full object-cover transition-transform group-hover:scale-105"
+                      />
+                    </div>
+                    <div className="p-4">
+                      <h3 className="font-medium text-lg">{template.name}</h3>
+                      <p className="text-sm text-muted-foreground">{template.description}</p>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </TabsContent>
+          </ScrollArea>
+        </Tabs>
+      </DialogContent>
+    </Dialog>
+  );
+};
+
+export default TemplateSelector;
