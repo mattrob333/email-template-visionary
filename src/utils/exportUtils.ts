@@ -1,4 +1,6 @@
 
+import React from 'react';
+
 /**
  * Copies the HTML code to clipboard
  */

@@ -205,6 +205,23 @@ const ImageManager = ({ isOpen, onClose, onInsertImage }: ImageManagerProps) => 
     toast.success('Image deleted successfully');
   };
   
+  const copyRenderedContent = async (iframeRef: React.RefObject<HTMLIFrameElement>): Promise<boolean> => {
+    try {
+      if (!iframeRef.current) return false;
+      
+      const iframeDocument = iframeRef.current.contentDocument || iframeRef.current.contentWindow?.document;
+      if (!iframeDocument) return false;
+      
+      const htmlContent = iframeDocument.documentElement.outerHTML;
+      
+      await navigator.clipboard.writeText(htmlContent);
+      return true;
+    } catch (err) {
+      console.error('Failed to copy rendered content: ', err);
+      return false;
+    }
+  };
+  
   return (
     <Dialog open={isOpen} onOpenChange={(open) => !open && onClose()}>
       <DialogContent className="sm:max-w-[800px] max-h-[80vh] overflow-hidden flex flex-col animate-fade-in">

@@ -2,7 +2,7 @@
 import { useState, useEffect, useRef } from 'react';
 import Navbar from '../components/Navbar';
 import Editor from '../components/Editor';
-import Preview from '../components/Preview';
+import Preview, { PreviewRef } from '../components/Preview';
 import { Template } from '../components/TemplateModal';
 import { useLocalStorage } from '../hooks/useLocalStorage';
 import { toast } from 'sonner';
@@ -10,6 +10,8 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { exportAsPdf } from '../utils/exportUtils';
+import { PrintSettings } from '../components/PrintOptions';
 
 const initialTemplate = `<!DOCTYPE html>
 <html>
@@ -90,8 +92,14 @@ const Index = () => {
   const [templateName, setTemplateName] = useState('');
   const [templates, setTemplates] = useLocalStorage<Template[]>('email-templates', []);
   const [editorWidth, setEditorWidth] = useState(50); // percentage
+  const [previewMode, setPreviewMode] = useState<'email' | 'print'>('email');
+  const [paperSize, setPaperSize] = useState<'letter' | 'a4'>('letter');
+  const [orientation, setOrientation] = useState<'portrait' | 'landscape'>('portrait');
+  const [showGuides, setShowGuides] = useState(false);
+  
   const containerRef = useRef<HTMLDivElement>(null);
   const resizeHandleRef = useRef<HTMLDivElement>(null);
+  const previewRef = useRef<PreviewRef>(null);
   const isResizingRef = useRef(false);
 
   // Check system preference for dark mode
@@ -140,6 +148,51 @@ const Index = () => {
   const loadTemplate = (template: Template) => {
     setHtmlContent(template.html);
     toast.success(`Loaded template: ${template.name}`);
+  };
+  
+  const togglePreviewMode = () => {
+    setPreviewMode(prev => prev === 'email' ? 'print' : 'email');
+  };
+  
+  const handleInsertImage = (imageHtml: string) => {
+    // Insert the image HTML at the cursor position or append to the end
+    setHtmlContent(prev => prev + imageHtml);
+    toast.success('Image inserted into template');
+  };
+  
+  const handleLoadNewTemplate = (html: string) => {
+    setHtmlContent(html);
+    toast.success('Template loaded');
+  };
+  
+  const handleColorSelect = (color: string) => {
+    // This would be implemented to insert the color at cursor position
+    // or apply to selected element
+    toast.success(`Color ${color} selected`);
+  };
+  
+  const handleExportPdf = (options: PrintSettings) => {
+    if (!previewRef.current) {
+      toast.error('Preview not available');
+      return;
+    }
+    
+    // Update preview settings first
+    setPaperSize(options.paperSize);
+    setOrientation(options.orientation);
+    
+    // Export as PDF
+    exportAsPdf(previewRef.current.getIframeRef(), {
+      pageSize: options.paperSize,
+      orientation: options.orientation,
+      filename: options.filename || 'document.pdf'
+    }).then(success => {
+      if (success) {
+        toast.success('PDF exported successfully!');
+      } else {
+        toast.error('Failed to export PDF');
+      }
+    });
   };
 
   // Setup resize functionality
@@ -193,7 +246,14 @@ const Index = () => {
         isDarkMode={isDarkMode}
         toggleDarkMode={toggleDarkMode}
         onSaveTemplate={handleSaveTemplate}
-        onLoadTemplate={() => {}}
+        onLoadTemplate={loadTemplate}
+        onLoadNewTemplate={handleLoadNewTemplate}
+        onInsertImage={handleInsertImage}
+        previewRef={previewRef}
+        previewMode={previewMode}
+        togglePreviewMode={togglePreviewMode}
+        onExportPdf={handleExportPdf}
+        onColorSelect={handleColorSelect}
       />
       
       <main className="flex-1 container mx-auto p-4 pt-6">
@@ -222,7 +282,14 @@ const Index = () => {
               className="h-full transition-all-medium" 
               style={{ width: `${100 - editorWidth}%` }}
             >
-              <Preview htmlContent={htmlContent} />
+              <Preview 
+                ref={previewRef}
+                htmlContent={htmlContent} 
+                previewMode={previewMode}
+                paperSize={paperSize}
+                orientation={orientation}
+                showGuides={showGuides}
+              />
             </div>
           </div>
         </div>
