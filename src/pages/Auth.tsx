@@ -51,10 +51,14 @@ const Auth = () => {
 
     setLoading(true);
     try {
+      // Use the current origin for redirect
+      const redirectTo = `${window.location.origin}`;
+      console.log("Redirect URL:", redirectTo);
+      
       const { error } = await supabase.auth.signInWithOtp({
         email,
         options: {
-          emailRedirectTo: window.location.origin,
+          emailRedirectTo: redirectTo,
         },
       });
 
