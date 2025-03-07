@@ -7,26 +7,24 @@ import { toast } from 'sonner';
 import { ChatMessage, getChatCompletion, hasOpenAIKey } from '../services/openai';
 import OpenAIKeyDialog from './OpenAIKeyDialog';
 import ImageManager from './ImageManager';
-
 interface AIChatProps {
   htmlContent: string;
   onUpdateHtml: (newHtml: string) => void;
 }
-
 type Message = {
   role: 'user' | 'assistant' | 'system';
   content: string;
   timestamp: Date;
-}
-
-const AIChat = ({ htmlContent, onUpdateHtml }: AIChatProps) => {
-  const [messages, setMessages] = useState<Message[]>([
-    {
-      role: 'assistant',
-      content: 'I can help you modify your HTML email template. Tell me what changes you want to make.',
-      timestamp: new Date()
-    }
-  ]);
+};
+const AIChat = ({
+  htmlContent,
+  onUpdateHtml
+}: AIChatProps) => {
+  const [messages, setMessages] = useState<Message[]>([{
+    role: 'assistant',
+    content: 'I can help you modify your HTML email template. Tell me what changes you want to make.',
+    timestamp: new Date()
+  }]);
   const [inputValue, setInputValue] = useState('');
   const [loading, setLoading] = useState(false);
   const [isKeyDialogOpen, setIsKeyDialogOpen] = useState(false);
@@ -37,15 +35,14 @@ const AIChat = ({ htmlContent, onUpdateHtml }: AIChatProps) => {
   const inputRef = useRef<HTMLInputElement>(null);
   const resizerRef = useRef<HTMLDivElement>(null);
   const isResizingRef = useRef(false);
-
   useEffect(() => {
-    messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
+    messagesEndRef.current?.scrollIntoView({
+      behavior: 'smooth'
+    });
   }, [messages]);
-
   useEffect(() => {
     const resizer = resizerRef.current;
     if (!resizer) return;
-
     const onMouseDown = (e: MouseEvent) => {
       e.preventDefault();
       isResizingRef.current = true;
@@ -53,24 +50,20 @@ const AIChat = ({ htmlContent, onUpdateHtml }: AIChatProps) => {
       document.addEventListener('mouseup', onMouseUp);
       document.body.style.cursor = 'row-resize';
     };
-
     const onMouseMove = (e: MouseEvent) => {
       if (!isResizingRef.current) return;
-      
       const containerRect = resizer.parentElement?.getBoundingClientRect();
       if (containerRect) {
         const newHeight = Math.max(150, Math.min(500, containerRect.bottom - e.clientY));
         setChatHeight(newHeight);
       }
     };
-
     const onMouseUp = () => {
       isResizingRef.current = false;
       document.removeEventListener('mousemove', onMouseMove);
       document.removeEventListener('mouseup', onMouseUp);
       document.body.style.cursor = '';
     };
-
     resizer.addEventListener('mousedown', onMouseDown);
     return () => {
       resizer.removeEventListener('mousedown', onMouseDown);
@@ -78,43 +71,32 @@ const AIChat = ({ htmlContent, onUpdateHtml }: AIChatProps) => {
       document.removeEventListener('mouseup', onMouseUp);
     };
   }, []);
-
   const handleSendMessage = async () => {
     if (!inputValue.trim()) return;
-    
     if (!hasOpenAIKey()) {
       setIsKeyDialogOpen(true);
       return;
     }
-    
     const userMessage: Message = {
       role: 'user',
       content: inputValue,
       timestamp: new Date()
     };
-    
     setMessages(prev => [...prev, userMessage]);
     setInputValue('');
     setLoading(true);
-    
     try {
-      const apiMessages: ChatMessage[] = messages
-        .filter(m => m.role !== 'system')
-        .map(m => ({
-          role: m.role,
-          content: m.content
-        }));
-      
+      const apiMessages: ChatMessage[] = messages.filter(m => m.role !== 'system').map(m => ({
+        role: m.role,
+        content: m.content
+      }));
       apiMessages.push({
         role: 'user',
         content: userMessage.content
       });
-      
       const response = await getChatCompletion(apiMessages, htmlContent);
-      
       if (response) {
         onUpdateHtml(response);
-        
         const aiResponse: Message = {
           role: 'assistant',
           content: 'HTML updated according to your request.',
@@ -129,14 +111,12 @@ const AIChat = ({ htmlContent, onUpdateHtml }: AIChatProps) => {
       setLoading(false);
     }
   };
-
   const handleKeyDown = (e: React.KeyboardEvent) => {
     if (e.key === 'Enter' && !e.shiftKey) {
       e.preventDefault();
       handleSendMessage();
     }
   };
-
   const clearConversation = () => {
     setMessages([{
       role: 'assistant',
@@ -144,26 +124,17 @@ const AIChat = ({ htmlContent, onUpdateHtml }: AIChatProps) => {
       timestamp: new Date()
     }]);
   };
-
   const handleInsertImage = (imageHtml: string) => {
     onUpdateHtml(htmlContent + "\n" + imageHtml);
-    
     const imageInsertedMessage: Message = {
       role: 'system',
       content: 'Image has been added to the template. You can now ask the AI to position or style it.',
       timestamp: new Date()
     };
-    
     setMessages(prev => [...prev, imageInsertedMessage]);
   };
-
-  return (
-    <div className="flex flex-col h-full">
-      <div 
-        ref={resizerRef}
-        className="w-full h-1 bg-border/30 cursor-row-resize hover:bg-primary/50 hover:h-1.5 -mt-1 transition-all"
-        title="Drag to resize"
-      >
+  return <div className="flex flex-col h-full">
+      <div ref={resizerRef} className="w-full h-1 bg-border/30 cursor-row-resize hover:bg-primary/50 hover:h-1.5 -mt-1 transition-all" title="Drag to resize">
         <div className="flex justify-center items-center h-full">
           <GripVertical className="h-3 w-3 text-muted-foreground/60" />
         </div>
@@ -175,182 +146,107 @@ const AIChat = ({ htmlContent, onUpdateHtml }: AIChatProps) => {
           HTML Editor Assistant
         </h2>
         <div className="flex items-center space-x-1">
-          <Button 
-            variant="ghost" 
-            size="sm" 
-            className="h-7 text-xs font-normal"
-            onClick={() => setShowVariables(!showVariables)}
-          >
+          <Button variant="ghost" size="sm" className="h-7 text-xs font-normal" onClick={() => setShowVariables(!showVariables)}>
             <Code className="h-3.5 w-3.5 mr-1" />
             Variables
           </Button>
-          <Button 
-            variant="ghost" 
-            size="icon" 
-            className="h-7 w-7" 
-            onClick={() => setIsKeyDialogOpen(true)}
-            title="Configure OpenAI API Key"
-          >
+          <Button variant="ghost" size="icon" className="h-7 w-7" onClick={() => setIsKeyDialogOpen(true)} title="Configure OpenAI API Key">
             <Shield className="h-3.5 w-3.5" />
           </Button>
         </div>
       </div>
       
-      {showVariables ? (
-        <VariableManager htmlContent={htmlContent} onUpdateHtml={onUpdateHtml} />
-      ) : (
-        <div className="flex-1 flex flex-col p-0" style={{ height: `${chatHeight}px` }}>
+      {showVariables ? <VariableManager htmlContent={htmlContent} onUpdateHtml={onUpdateHtml} /> : <div className="flex-1 flex flex-col p-0" style={{
+      height: `${chatHeight}px`
+    }}>
           <ScrollArea className="flex-1 p-2">
             <div className="space-y-2">
-              {messages.map((message, index) => (
-                <div 
-                  key={index} 
-                  className={`flex ${message.role === 'user' ? 'justify-end' : 'justify-start'}`}
-                >
-                  <div 
-                    className={`max-w-[85%] px-2 py-1 rounded-lg text-xs ${
-                      message.role === 'user' 
-                        ? 'bg-primary/10 text-primary-foreground/90 rounded-tr-none' 
-                        : message.role === 'system'
-                        ? 'bg-secondary/20 rounded-tl-none' 
-                        : 'bg-muted rounded-tl-none'
-                    }`}
-                  >
+              {messages.map((message, index) => <div key={index} className={`flex ${message.role === 'user' ? 'justify-end' : 'justify-start'}`}>
+                  <div className={`max-w-[85%] px-2 py-1 rounded-lg text-xs ${message.role === 'user' ? 'bg-primary/10 text-primary-foreground/90 rounded-tr-none' : message.role === 'system' ? 'bg-secondary/20 rounded-tl-none' : 'bg-muted rounded-tl-none'}`}>
                     <div className="flex items-center gap-1 mb-1 text-xs opacity-70">
-                      {message.role === 'user' ? 
-                        <><span>You</span><User className="h-3 w-3" /></> : 
-                        message.role === 'system' ?
-                        <><Shield className="h-3 w-3" /><span>System</span></> :
-                        <><Bot className="h-3 w-3" /><span>Assistant</span></>
-                      }
+                      {message.role === 'user' ? <><span>You</span><User className="h-3 w-3" /></> : message.role === 'system' ? <><Shield className="h-3 w-3" /><span>System</span></> : <><Bot className="h-3 w-3" /><span>Assistant</span></>}
                     </div>
-                    <p className="whitespace-pre-wrap">{message.content}</p>
+                    <p className="whitespace-pre-wrap text-neutral-50">{message.content}</p>
                     <div className="text-xs opacity-50 mt-1 text-right">
-                      {message.timestamp.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
+                      {message.timestamp.toLocaleTimeString([], {
+                  hour: '2-digit',
+                  minute: '2-digit'
+                })}
                     </div>
                   </div>
-                </div>
-              ))}
+                </div>)}
               <div ref={messagesEndRef} />
             </div>
           </ScrollArea>
           
           <div className="p-2 border-t border-border/40 bg-background">
             <div className="flex space-x-2">
-              <Button 
-                variant="outline" 
-                size="icon" 
-                onClick={clearConversation}
-                title="Clear conversation"
-                className="h-8 w-8"
-              >
+              <Button variant="outline" size="icon" onClick={clearConversation} title="Clear conversation" className="h-8 w-8">
                 <RefreshCcw className="h-3 w-3" />
               </Button>
-              <Button
-                variant="outline"
-                size="icon"
-                onClick={() => setIsImageManagerOpen(true)}
-                title="Insert image"
-                className="h-8 w-8"
-              >
+              <Button variant="outline" size="icon" onClick={() => setIsImageManagerOpen(true)} title="Insert image" className="h-8 w-8">
                 <ImagePlus className="h-3 w-3" />
               </Button>
-              <Input
-                ref={inputRef}
-                value={inputValue}
-                onChange={(e) => setInputValue(e.target.value)}
-                onKeyDown={handleKeyDown}
-                placeholder={hasOpenAIKey() ? "Describe changes to make to the HTML..." : "Add OpenAI API key to start editing..."}
-                disabled={loading}
-                className="flex-1 h-8 text-sm bg-gray-100 dark:bg-gray-800 text-gray-900 dark:text-gray-100 border-gray-300 dark:border-gray-700"
-              />
-              <Button 
-                onClick={handleSendMessage} 
-                disabled={loading || !inputValue.trim()}
-                size="icon"
-                className="h-8 w-8"
-              >
-                {loading ? (
-                  <Loader2 className="h-3 w-3 animate-spin" />
-                ) : (
-                  <Send className="h-3 w-3" />
-                )}
+              <Input ref={inputRef} value={inputValue} onChange={e => setInputValue(e.target.value)} onKeyDown={handleKeyDown} placeholder={hasOpenAIKey() ? "Describe changes to make to the HTML..." : "Add OpenAI API key to start editing..."} disabled={loading} className="flex-1 h-8 text-sm text-gray-900 dark:text-gray-100 border-gray-300 dark:border-gray-700 bg-neutral-950" />
+              <Button onClick={handleSendMessage} disabled={loading || !inputValue.trim()} size="icon" className="h-8 w-8">
+                {loading ? <Loader2 className="h-3 w-3 animate-spin" /> : <Send className="h-3 w-3" />}
               </Button>
             </div>
           </div>
-        </div>
-      )}
+        </div>}
 
-      <OpenAIKeyDialog 
-        open={isKeyDialogOpen} 
-        onOpenChange={setIsKeyDialogOpen} 
-      />
+      <OpenAIKeyDialog open={isKeyDialogOpen} onOpenChange={setIsKeyDialogOpen} />
       
-      <ImageManager
-        isOpen={isImageManagerOpen}
-        onClose={() => setIsImageManagerOpen(false)}
-        onInsert={handleInsertImage}
-      />
-    </div>
-  );
+      <ImageManager isOpen={isImageManagerOpen} onClose={() => setIsImageManagerOpen(false)} onInsert={handleInsertImage} />
+    </div>;
 };
-
-const VariableManager = ({ htmlContent, onUpdateHtml }: AIChatProps) => {
+const VariableManager = ({
+  htmlContent,
+  onUpdateHtml
+}: AIChatProps) => {
   const [variables, setVariables] = useState<Record<string, string>>({});
   const [previewHtml, setPreviewHtml] = useState(htmlContent);
-  
   useEffect(() => {
     const extractedVars: Record<string, string> = {};
     const regex = /\{\{([^}]+)\}\}/g;
     let match;
-    
     while ((match = regex.exec(htmlContent)) !== null) {
       const varName = match[1].trim();
       if (!extractedVars[varName]) {
         extractedVars[varName] = '';
       }
     }
-    
     setVariables(extractedVars);
     setPreviewHtml(htmlContent);
   }, [htmlContent]);
-  
   const handleVariableChange = (name: string, value: string) => {
     setVariables(prev => ({
       ...prev,
       [name]: value
     }));
   };
-  
   const applyVariables = () => {
     let updatedHtml = htmlContent;
-    
     Object.entries(variables).forEach(([name, value]) => {
       const regex = new RegExp(`\\{\\{\\s*${name}\\s*\\}\\}`, 'g');
       updatedHtml = updatedHtml.replace(regex, value);
     });
-    
     setPreviewHtml(updatedHtml);
   };
-  
   const saveWithVariables = () => {
     let updatedHtml = htmlContent;
-    
     Object.entries(variables).forEach(([name, value]) => {
       const regex = new RegExp(`\\{\\{\\s*${name}\\s*\\}\\}`, 'g');
       updatedHtml = updatedHtml.replace(regex, value);
     });
-    
     onUpdateHtml(updatedHtml);
     toast.success('Template updated with your variables');
   };
-  
   const insertVariableIntoTemplate = (name: string) => {
     const updatedHtml = htmlContent + `\n<!-- Example usage: -->\n<p>{{${name}}}</p>`;
     onUpdateHtml(updatedHtml);
     toast.success(`Variable {{${name}}} added to template`);
   };
-  
   const addNewVariable = () => {
     const newVarName = `variable${Object.keys(variables).length + 1}`;
     setVariables(prev => ({
@@ -358,25 +254,16 @@ const VariableManager = ({ htmlContent, onUpdateHtml }: AIChatProps) => {
       [newVarName]: ''
     }));
   };
-
-  return (
-    <div className="flex flex-col h-full">
+  return <div className="flex flex-col h-full">
       <ScrollArea className="flex-1 p-4">
-        {Object.keys(variables).length > 0 ? (
-          <div className="space-y-4">
+        {Object.keys(variables).length > 0 ? <div className="space-y-4">
             <p className="text-sm text-muted-foreground">
               Fill in the values for variables found in your template:
             </p>
-            {Object.entries(variables).map(([name, value]) => (
-              <div key={name} className="space-y-2">
+            {Object.entries(variables).map(([name, value]) => <div key={name} className="space-y-2">
                 <label className="text-sm font-medium">{name}:</label>
-                <Input
-                  value={value}
-                  onChange={(e) => handleVariableChange(name, e.target.value)}
-                  placeholder={`Enter value for ${name}`}
-                />
-              </div>
-            ))}
+                <Input value={value} onChange={e => handleVariableChange(name, e.target.value)} placeholder={`Enter value for ${name}`} />
+              </div>)}
             <div className="flex space-x-2 pt-2">
               <Button onClick={applyVariables} variant="secondary" size="sm">
                 Preview Changes
@@ -385,9 +272,7 @@ const VariableManager = ({ htmlContent, onUpdateHtml }: AIChatProps) => {
                 Apply to Template
               </Button>
             </div>
-          </div>
-        ) : (
-          <div className="flex flex-col items-center justify-center h-full space-y-4 text-center">
+          </div> : <div className="flex flex-col items-center justify-center h-full space-y-4 text-center">
             <div className="text-muted-foreground">
               <p>No variables found in your template.</p>
               <p className="text-sm mt-2">Use double curly braces to create variables:</p>
@@ -396,19 +281,14 @@ const VariableManager = ({ htmlContent, onUpdateHtml }: AIChatProps) => {
             <Button onClick={() => insertVariableIntoTemplate("name")} variant="outline" size="sm">
               Insert Example Variable
             </Button>
-          </div>
-        )}
+          </div>}
       </ScrollArea>
       
-      {Object.keys(variables).length > 0 && (
-        <div className="p-4 border-t border-border/40">
+      {Object.keys(variables).length > 0 && <div className="p-4 border-t border-border/40">
           <Button onClick={addNewVariable} variant="outline" size="sm" className="w-full">
             Add Custom Variable
           </Button>
-        </div>
-      )}
-    </div>
-  );
+        </div>}
+    </div>;
 };
-
 export default AIChat;
