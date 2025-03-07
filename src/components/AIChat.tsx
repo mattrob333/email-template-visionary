@@ -1,11 +1,12 @@
-
 import { useState, useRef, useEffect } from 'react';
-import { Send, Bot, User, RefreshCcw } from 'lucide-react';
+import { Send, Bot, User, RefreshCcw, Shield, Loader2 } from 'lucide-react';
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { toast } from 'sonner';
+import { ChatMessage, getChatCompletion, hasOpenAIKey } from '../services/openai';
+import OpenAIKeyDialog from './OpenAIKeyDialog';
 
 interface AIChatProps {
   htmlContent: string;
@@ -13,7 +14,7 @@ interface AIChatProps {
 }
 
 type Message = {
-  role: 'user' | 'assistant';
+  role: 'user' | 'assistant' | 'system';
   content: string;
   timestamp: Date;
 }
@@ -28,6 +29,7 @@ const AIChat = ({ htmlContent, onUpdateHtml }: AIChatProps) => {
   ]);
   const [inputValue, setInputValue] = useState('');
   const [loading, setLoading] = useState(false);
+  const [isKeyDialogOpen, setIsKeyDialogOpen] = useState(false);
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLInputElement>(null);
 
@@ -38,6 +40,11 @@ const AIChat = ({ htmlContent, onUpdateHtml }: AIChatProps) => {
 
   const handleSendMessage = async () => {
     if (!inputValue.trim()) return;
+    
+    if (!hasOpenAIKey()) {
+      setIsKeyDialogOpen(true);
+      return;
+    }
     
     // Add user message
     const userMessage: Message = {
@@ -51,20 +58,32 @@ const AIChat = ({ htmlContent, onUpdateHtml }: AIChatProps) => {
     setLoading(true);
     
     try {
-      // This is a placeholder for the actual AI API call
-      // In a real implementation, you would send the user message and current HTML to the AI API
+      // Prepare messages for OpenAI API
+      const apiMessages: ChatMessage[] = messages
+        .filter(m => m.role !== 'system')
+        .map(m => ({
+          role: m.role,
+          content: m.content
+        }));
       
-      // Simulate API response delay
-      await new Promise(resolve => setTimeout(resolve, 1500));
+      // Add the new user message
+      apiMessages.push({
+        role: 'user',
+        content: userMessage.content
+      });
       
-      // For demonstration, just echo back a response
-      const aiResponse: Message = {
-        role: 'assistant',
-        content: `I received your message: "${inputValue}". To edit your template, I would need to connect to an AI service. For now, this is a placeholder response.`,
-        timestamp: new Date()
-      };
+      // Get response from OpenAI
+      const response = await getChatCompletion(apiMessages, htmlContent);
       
-      setMessages(prev => [...prev, aiResponse]);
+      if (response) {
+        const aiResponse: Message = {
+          role: 'assistant',
+          content: response,
+          timestamp: new Date()
+        };
+        
+        setMessages(prev => [...prev, aiResponse]);
+      }
     } catch (error) {
       toast.error('Failed to get AI response');
       console.error('AI response error:', error);
@@ -90,11 +109,20 @@ const AIChat = ({ htmlContent, onUpdateHtml }: AIChatProps) => {
 
   return (
     <div className="flex flex-col h-full">
-      <div className="p-2 border-b border-border/40 bg-black/10">
+      <div className="p-2 border-b border-border/40 bg-black/10 flex justify-between items-center">
         <h2 className="text-sm font-semibold flex items-center">
           <Bot className="mr-2 h-4 w-4" />
           AI Assistant
         </h2>
+        <Button 
+          variant="ghost" 
+          size="icon" 
+          className="h-7 w-7" 
+          onClick={() => setIsKeyDialogOpen(true)}
+          title="Configure OpenAI API Key"
+        >
+          <Shield className="h-3.5 w-3.5" />
+        </Button>
       </div>
       
       <Tabs defaultValue="chat" className="flex flex-col flex-1">
@@ -151,7 +179,7 @@ const AIChat = ({ htmlContent, onUpdateHtml }: AIChatProps) => {
                 value={inputValue}
                 onChange={(e) => setInputValue(e.target.value)}
                 onKeyDown={handleKeyDown}
-                placeholder="Ask about your email template..."
+                placeholder={hasOpenAIKey() ? "Ask about your email template..." : "Add OpenAI API key to start chatting..."}
                 disabled={loading}
                 className="flex-1 h-8 text-sm"
               />
@@ -161,7 +189,11 @@ const AIChat = ({ htmlContent, onUpdateHtml }: AIChatProps) => {
                 size="icon"
                 className="h-8 w-8"
               >
-                <Send className="h-3 w-3" />
+                {loading ? (
+                  <Loader2 className="h-3 w-3 animate-spin" />
+                ) : (
+                  <Send className="h-3 w-3" />
+                )}
               </Button>
             </div>
           </div>
@@ -171,6 +203,11 @@ const AIChat = ({ htmlContent, onUpdateHtml }: AIChatProps) => {
           <VariableManager htmlContent={htmlContent} onUpdateHtml={onUpdateHtml} />
         </TabsContent>
       </Tabs>
+
+      <OpenAIKeyDialog 
+        open={isKeyDialogOpen} 
+        onOpenChange={setIsKeyDialogOpen} 
+      />
     </div>
   );
 };
