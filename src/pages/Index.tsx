@@ -1,3 +1,4 @@
+
 import { useState, useEffect, useRef } from 'react';
 import Navbar from '../components/Navbar';
 import { Editor } from '../components/Editor';
@@ -38,6 +39,11 @@ const initialTemplate = `<!DOCTYPE html>
       text-align: center;
       border-bottom: 1px solid #dee2e6;
     }
+    .logo {
+      max-width: 100%;
+      height: auto;
+      margin-bottom: 15px;
+    }
     .content {
       padding: 20px;
     }
@@ -57,10 +63,19 @@ const initialTemplate = `<!DOCTYPE html>
       border-radius: 4px;
       margin-top: 10px;
     }
+    img {
+      max-width: 100%;
+      height: auto;
+    }
   </style>
 </head>
 <body>
   <div class="container">
+    <!-- Banner Image Area - Add your logo or banner here -->
+    <div style="width:100%;text-align:center;margin-bottom:20px;">
+      <!-- Image will go here -->
+    </div>
+    
     <div class="header">
       <h1>Welcome to Our Newsletter</h1>
     </div>
