@@ -1,80 +1,161 @@
+import { useState, useRef, useEffect } from 'react';
+import { Editor as TinyMCEEditor } from '@tinymce/tinymce-react';
+import { Button } from "@/components/ui/button";
+import { TemplateModal, Template } from './TemplateModal';
+import { TemplateSelector } from './TemplateSelector';
+import { toast } from 'sonner';
+import { Save, FileDown, FileUp, Code, Layout } from 'lucide-react';
 
-import { useState, useEffect, useRef } from 'react';
-import { basicSetup } from 'codemirror';
-import { EditorView, keymap, lineNumbers, highlightActiveLine } from '@codemirror/view';
-import { EditorState, Extension } from '@codemirror/state';
-import { html } from '@codemirror/lang-html';
-import { indentWithTab } from '@codemirror/commands';
-import { oneDark } from '@codemirror/theme-one-dark';
+export const Editor = () => {
+  const [isTemplateModalOpen, setIsTemplateModalOpen] = useState(false);
+  const [isTemplateSelectorOpen, setIsTemplateSelectorOpen] = useState(false);
+  const [editorContent, setEditorContent] = useState('');
+  const editorRef = useRef<TinyMCEEditor | null>(null);
 
-interface EditorProps {
-  value: string;
-  onChange: (value: string) => void;
-  isDarkMode: boolean;
-}
+  const getCurrentHtml = (): string => {
+    return editorContent;
+  };
 
-const Editor = ({ value, onChange, isDarkMode }: EditorProps) => {
-  const editorRef = useRef<HTMLDivElement>(null);
-  const [editorView, setEditorView] = useState<EditorView | null>(null);
+  const handleEditorChange = (content: string) => {
+    setEditorContent(content);
+  };
 
-  useEffect(() => {
-    if (!editorRef.current) return;
+  const handleSaveClick = () => {
+    setIsTemplateModalOpen(true);
+  };
 
-    // Clean up previous editor instance
-    if (editorView) {
-      editorView.destroy();
+  const handleTemplateSelect = (template: Template) => {
+    if (editorRef.current) {
+      editorRef.current.setContent(template.html);
+      toast.success('Template loaded successfully');
     }
+  };
 
-    // Create theme extension based on dark mode state
-    const theme: Extension = isDarkMode ? oneDark : [];
+  const handleExportHtml = () => {
+    const content = editorContent;
+    const blob = new Blob([content], { type: 'text/html' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = 'email-template.html';
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+    URL.revokeObjectURL(url);
+    toast.success('HTML exported successfully');
+  };
 
-    // Set up the editor
-    const updateListener = EditorView.updateListener.of(update => {
-      if (update.docChanged) {
-        onChange(update.state.doc.toString());
-      }
-    });
-
-    const state = EditorState.create({
-      doc: value,
-      extensions: [
-        basicSetup,
-        lineNumbers(),
-        highlightActiveLine(),
-        html(),
-        keymap.of([indentWithTab]),
-        updateListener,
-        theme,
-        EditorView.lineWrapping,
-      ],
-    });
-
-    const view = new EditorView({
-      state,
-      parent: editorRef.current,
-    });
-
-    setEditorView(view);
-
-    return () => {
-      view.destroy();
-    };
-  }, [editorRef, isDarkMode]);
-
-  // Update editor content when value prop changes
-  useEffect(() => {
-    if (editorView && value !== editorView.state.doc.toString()) {
-      editorView.dispatch({
-        changes: {
-          from: 0,
-          to: editorView.state.doc.length,
-          insert: value,
-        },
-      });
+  const handleImportHtml = (event: React.ChangeEvent<HTMLInputElement>) => {
+    const file = event.target.files?.[0];
+    if (file) {
+      const reader = new FileReader();
+      reader.onload = (e) => {
+        const content = e.target?.result as string;
+        if (editorRef.current) {
+          editorRef.current.setContent(content);
+          toast.success('HTML imported successfully');
+        }
+      };
+      reader.readAsText(file);
     }
-  }, [value, editorView]);
+  };
 
-  return <div ref={editorRef} className="w-full h-full" />;
+  const handleViewSource = () => {
+    const content = editorContent;
+    const formatted = content.replace(/></g, '>\n<');
+    console.log(formatted);
+    toast.success('HTML source code logged to console');
+  };
+
+  return (
+    <div className="flex flex-col h-full">
+      <div className="flex items-center justify-between p-4 border-b">
+        <div className="flex items-center space-x-2">
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={() => setIsTemplateSelectorOpen(true)}
+          >
+            <Layout className="h-4 w-4 mr-2" />
+            Templates
+          </Button>
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={handleSaveClick}
+          >
+            <Save className="h-4 w-4 mr-2" />
+            Save as Template
+          </Button>
+        </div>
+        <div className="flex items-center space-x-2">
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={handleExportHtml}
+          >
+            <FileDown className="h-4 w-4 mr-2" />
+            Export HTML
+          </Button>
+          <div className="relative">
+            <input
+              type="file"
+              accept=".html"
+              onChange={handleImportHtml}
+              className="absolute inset-0 w-full h-full opacity-0 cursor-pointer"
+            />
+            <Button
+              variant="outline"
+              size="sm"
+            >
+              <FileUp className="h-4 w-4 mr-2" />
+              Import HTML
+            </Button>
+          </div>
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={handleViewSource}
+          >
+            <Code className="h-4 w-4 mr-2" />
+            View Source
+          </Button>
+        </div>
+      </div>
+
+      <div className="flex-1 min-h-0">
+        <TinyMCEEditor
+          ref={editorRef}
+          init={{
+            height: '100%',
+            menubar: true,
+            plugins: [
+              'advlist', 'autolink', 'lists', 'link', 'image', 'charmap', 'preview',
+              'anchor', 'searchreplace', 'visualblocks', 'code', 'fullscreen',
+              'insertdatetime', 'media', 'table', 'code', 'help', 'wordcount'
+            ],
+            toolbar: 'undo redo | blocks | ' +
+              'bold italic forecolor | alignleft aligncenter ' +
+              'alignright alignjustify | bullist numlist outdent indent | ' +
+              'removeformat | help',
+            content_style: 'body { font-family:Helvetica,Arial,sans-serif; font-size:14px }'
+          }}
+          onEditorChange={handleEditorChange}
+        />
+      </div>
+
+      <TemplateModal
+        isOpen={isTemplateModalOpen}
+        onClose={() => setIsTemplateModalOpen(false)}
+        onSelect={handleTemplateSelect}
+        currentHtml={getCurrentHtml()}
+      />
+
+      <TemplateSelector
+        isOpen={isTemplateSelectorOpen}
+        onClose={() => setIsTemplateSelectorOpen(false)}
+        onSelect={handleTemplateSelect}
+      />
+    </div>
+  );
 };
-
-export default Editor;
