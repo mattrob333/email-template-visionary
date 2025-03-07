@@ -1,6 +1,5 @@
-
 import { useState, useRef, useEffect } from 'react';
-import { Send, Bot, User, RefreshCcw, Shield, Loader2, Code, GripHorizontal, ImagePlus } from 'lucide-react';
+import { Send, Bot, User, RefreshCcw, Shield, Loader2, Code, ImagePlus } from 'lucide-react';
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { ScrollArea } from "@/components/ui/scroll-area";
@@ -20,7 +19,7 @@ type Message = {
   timestamp: Date;
 };
 
-const DEFAULT_CHAT_HEIGHT = 320; // Increased default height
+const FIXED_CHAT_HEIGHT = 350; // 10% taller than previous default of 320px
 
 const AIChat = ({
   htmlContent,
@@ -35,71 +34,17 @@ const AIChat = ({
   const [loading, setLoading] = useState(false);
   const [isKeyDialogOpen, setIsKeyDialogOpen] = useState(false);
   const [showVariables, setShowVariables] = useState(false);
-  const [chatHeight, setChatHeight] = useState(DEFAULT_CHAT_HEIGHT);
   const [isImageManagerOpen, setIsImageManagerOpen] = useState(false);
   
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLInputElement>(null);
-  const resizerRef = useRef<HTMLDivElement>(null);
   const chatContainerRef = useRef<HTMLDivElement>(null);
-  const isResizingRef = useRef(false);
-  const startYRef = useRef(0);
-  const startHeightRef = useRef(0);
 
   useEffect(() => {
     messagesEndRef.current?.scrollIntoView({
       behavior: 'smooth'
     });
   }, [messages]);
-
-  useEffect(() => {
-    const resizer = resizerRef.current;
-    if (!resizer) return;
-
-    const onMouseDown = (e: MouseEvent) => {
-      e.preventDefault();
-      isResizingRef.current = true;
-      startYRef.current = e.clientY;
-      startHeightRef.current = chatHeight;
-      
-      document.addEventListener('mousemove', onMouseMove);
-      document.addEventListener('mouseup', onMouseUp);
-      document.body.style.cursor = 'row-resize';
-      document.body.style.userSelect = 'none';
-    };
-
-    const onMouseMove = (e: MouseEvent) => {
-      if (!isResizingRef.current) return;
-      
-      // Calculate how far the mouse has moved
-      const deltaY = startYRef.current - e.clientY;
-      
-      // Calculate new height (increase when moving up, decrease when moving down)
-      const newHeight = Math.max(150, Math.min(600, startHeightRef.current + deltaY));
-      
-      setChatHeight(newHeight);
-      
-      if (chatContainerRef.current) {
-        chatContainerRef.current.style.height = `${newHeight}px`;
-      }
-    };
-
-    const onMouseUp = () => {
-      isResizingRef.current = false;
-      document.removeEventListener('mousemove', onMouseMove);
-      document.removeEventListener('mouseup', onMouseUp);
-      document.body.style.cursor = '';
-      document.body.style.userSelect = '';
-    };
-
-    resizer.addEventListener('mousedown', onMouseDown);
-    
-    return () => {
-      resizer.removeEventListener('mousedown', onMouseDown);
-      document.removeEventListener('mousemove', onMouseMove);
-      document.removeEventListener('mouseup', onMouseUp);
-    };
-  }, [chatHeight]);
 
   const handleSendMessage = async () => {
     if (!inputValue.trim()) return;
@@ -168,14 +113,6 @@ const AIChat = ({
   };
 
   return <div className="flex flex-col h-full">
-      <div 
-        ref={resizerRef} 
-        className="chat-resize-handle" 
-        title="Drag to resize"
-      >
-        <GripHorizontal className="chat-resize-handle-icon h-4 w-4" />
-      </div>
-      
       <div className="p-2 border-b border-border/40 bg-black/10 flex justify-between items-center">
         <h2 className="text-sm font-semibold flex items-center">
           <Bot className="mr-2 h-4 w-4" />
@@ -196,7 +133,7 @@ const AIChat = ({
         <div 
           ref={chatContainerRef}
           className="flex-1 flex flex-col p-0" 
-          style={{ height: `${chatHeight}px` }}
+          style={{ height: `${FIXED_CHAT_HEIGHT}px` }}
         >
           <ScrollArea className="flex-1 p-2">
             <div className="space-y-2">

@@ -87,29 +87,6 @@
   z-index: 10;
 }
 
-.chat-resize-handle {
-  @apply w-full h-4 bg-border/50 cursor-row-resize flex justify-center items-center;
-  transition: background-color 0.2s ease, height 0.2s ease;
-  position: relative;
-  z-index: 30;
-}
-
-.chat-resize-handle:hover {
-  @apply bg-primary/60 h-5;
-}
-
-.chat-resize-handle:active {
-  @apply bg-primary/80;
-}
-
-.chat-resize-handle-icon {
-  @apply text-muted-foreground/70;
-}
-
-.chat-resize-handle:hover .chat-resize-handle-icon {
-  @apply text-background;
-}
-
 .transition-all-medium {
   @apply transition-all duration-300 ease-in-out;
 }
@@ -153,8 +130,7 @@
 .ai-chat-area {
   position: relative;
   overflow: hidden;
-  min-height: 150px;
-  max-height: 600px; /* Increased max height to match the red box area */
+  height: 350px; /* Fixed height matching the component */
   transition: height 0.2s ease;
 }
 
