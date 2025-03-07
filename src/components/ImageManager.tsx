@@ -1,3 +1,4 @@
+
 import { useState, useRef } from 'react';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
@@ -214,6 +215,7 @@ const ImageManager = ({ isOpen, onClose, onInsertImage }: ImageManagerProps) => 
       
       const htmlContent = iframeDocument.documentElement.outerHTML;
       
+      // Fix: Use writeText instead of ClipboardItem
       await navigator.clipboard.writeText(htmlContent);
       return true;
     } catch (err) {

@@ -1,4 +1,3 @@
-
 import { useState, useEffect, useRef } from 'react';
 import Navbar from '../components/Navbar';
 import Editor from '../components/Editor';
@@ -102,7 +101,6 @@ const Index = () => {
   const previewRef = useRef<PreviewRef>(null);
   const isResizingRef = useRef(false);
 
-  // Check system preference for dark mode
   useEffect(() => {
     const prefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
     setIsDarkMode(prefersDark);
@@ -112,7 +110,6 @@ const Index = () => {
     setIsDarkMode(prev => !prev);
   };
 
-  // Effect to apply dark mode class to body
   useEffect(() => {
     if (isDarkMode) {
       document.documentElement.classList.add('dark');
@@ -155,7 +152,6 @@ const Index = () => {
   };
   
   const handleInsertImage = (imageHtml: string) => {
-    // Insert the image HTML at the cursor position or append to the end
     setHtmlContent(prev => prev + imageHtml);
     toast.success('Image inserted into template');
   };
@@ -166,8 +162,6 @@ const Index = () => {
   };
   
   const handleColorSelect = (color: string) => {
-    // This would be implemented to insert the color at cursor position
-    // or apply to selected element
     toast.success(`Color ${color} selected`);
   };
   
@@ -177,13 +171,11 @@ const Index = () => {
       return;
     }
     
-    // Update preview settings first
-    setPaperSize(options.paperSize);
+    setPaperSize(options.pageSize);
     setOrientation(options.orientation);
     
-    // Export as PDF
     exportAsPdf(previewRef.current.getIframeRef(), {
-      pageSize: options.paperSize,
+      pageSize: options.pageSize,
       orientation: options.orientation,
       filename: options.filename || 'document.pdf'
     }).then(success => {
@@ -195,7 +187,6 @@ const Index = () => {
     });
   };
 
-  // Setup resize functionality
   useEffect(() => {
     const resizeHandle = resizeHandleRef.current;
     const container = containerRef.current;
@@ -217,7 +208,6 @@ const Index = () => {
       const containerRect = container.getBoundingClientRect();
       const newWidth = ((e.clientX - containerRect.left) / containerRect.width) * 100;
       
-      // Constrain to reasonable limits (20% - 80%)
       const constrainedWidth = Math.max(20, Math.min(80, newWidth));
       setEditorWidth(constrainedWidth);
     };
@@ -259,7 +249,6 @@ const Index = () => {
       <main className="flex-1 container mx-auto p-4 pt-6">
         <div className="editor-container rounded-lg overflow-hidden glass-panel" ref={containerRef}>
           <div className="flex h-full">
-            {/* Left panel - Editor */}
             <div 
               className="h-full transition-all-medium" 
               style={{ width: `${editorWidth}%` }}
@@ -271,13 +260,11 @@ const Index = () => {
               />
             </div>
             
-            {/* Resize handle */}
             <div 
               ref={resizeHandleRef}
               className="resize-handle h-full transition-colors" 
             />
             
-            {/* Right panel - Preview */}
             <div 
               className="h-full transition-all-medium" 
               style={{ width: `${100 - editorWidth}%` }}
@@ -295,7 +282,6 @@ const Index = () => {
         </div>
       </main>
       
-      {/* Save Template Dialog */}
       <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
         <DialogContent className="sm:max-w-[425px] animate-fade-in">
           <DialogHeader>
