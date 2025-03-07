@@ -1,10 +1,8 @@
 
-import { useState, useRef, useEffect } from 'react';
-import { Button } from "@/components/ui/button";
+import { useRef } from 'react';
 import { TemplateModal, Template } from './TemplateModal';
 import TemplateSelector from './TemplateSelector';
 import { toast } from 'sonner';
-import { Save, FileDown, FileUp, Code, Layout } from 'lucide-react';
 
 interface EditorProps {
   value: string;
@@ -13,18 +11,7 @@ interface EditorProps {
 }
 
 export const Editor = ({ value, onChange, isDarkMode }: EditorProps) => {
-  const [isTemplateModalOpen, setIsTemplateModalOpen] = useState(false);
-  const [isTemplateSelectorOpen, setIsTemplateSelectorOpen] = useState(false);
   const textareaRef = useRef<HTMLTextAreaElement>(null);
-
-  const handleSaveClick = () => {
-    setIsTemplateModalOpen(true);
-  };
-
-  const handleTemplateSelect = (template: Template) => {
-    onChange(template.html);
-    toast.success('Template loaded successfully');
-  };
 
   const handleExportHtml = () => {
     const blob = new Blob([value], { type: 'text/html' });
@@ -60,60 +47,6 @@ export const Editor = ({ value, onChange, isDarkMode }: EditorProps) => {
 
   return (
     <div className="flex flex-col h-full">
-      <div className="flex items-center justify-between p-4 border-b">
-        <div className="flex items-center space-x-2">
-          <Button
-            variant="outline"
-            size="sm"
-            onClick={() => setIsTemplateSelectorOpen(true)}
-          >
-            <Layout className="h-4 w-4 mr-2" />
-            Templates
-          </Button>
-          <Button
-            variant="outline"
-            size="sm"
-            onClick={handleSaveClick}
-          >
-            <Save className="h-4 w-4 mr-2" />
-            Save as Template
-          </Button>
-        </div>
-        <div className="flex items-center space-x-2">
-          <Button
-            variant="outline"
-            size="sm"
-            onClick={handleExportHtml}
-          >
-            <FileDown className="h-4 w-4 mr-2" />
-            Export HTML
-          </Button>
-          <div className="relative">
-            <input
-              type="file"
-              accept=".html"
-              onChange={handleImportHtml}
-              className="absolute inset-0 w-full h-full opacity-0 cursor-pointer"
-            />
-            <Button
-              variant="outline"
-              size="sm"
-            >
-              <FileUp className="h-4 w-4 mr-2" />
-              Import HTML
-            </Button>
-          </div>
-          <Button
-            variant="outline"
-            size="sm"
-            onClick={handleViewSource}
-          >
-            <Code className="h-4 w-4 mr-2" />
-            View Source
-          </Button>
-        </div>
-      </div>
-
       <div className="flex-1 min-h-0 overflow-auto">
         <textarea
           ref={textareaRef}
@@ -125,26 +58,6 @@ export const Editor = ({ value, onChange, isDarkMode }: EditorProps) => {
           spellCheck="false"
         />
       </div>
-
-      <TemplateModal
-        isOpen={isTemplateModalOpen}
-        onClose={() => setIsTemplateModalOpen(false)}
-        onSelect={handleTemplateSelect}
-        currentHtml={value}
-      />
-
-      <TemplateSelector
-        isOpen={isTemplateSelectorOpen}
-        onClose={() => setIsTemplateSelectorOpen(false)}
-        onSelect={(template) => {
-          if (typeof template === 'string') {
-            onChange(template);
-          } else if (typeof template === 'object' && 'html' in template) {
-            onChange(template.html);
-          }
-          toast.success('Template loaded successfully');
-        }}
-      />
     </div>
   );
 };
