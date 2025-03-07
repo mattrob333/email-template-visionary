@@ -1,5 +1,5 @@
 
-import React, { useState } from 'react';
+import React, { useState, useRef } from 'react';
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -8,11 +8,29 @@ import { ScrollArea } from "@/components/ui/scroll-area";
 import { Upload, Image as ImageIcon, Link } from 'lucide-react';
 import { toast } from 'sonner';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
+import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 
 export interface ImageManagerProps {
   isOpen: boolean;
   onClose: () => void;
   onInsert: (imageHtml: string) => void;
+}
+
+type ImageRatio = "original" | "1:1" | "4:3" | "16:9" | "banner";
+
+interface ImageSizeOption {
+  id: ImageRatio;
+  name: string;
+  width?: string;
+  height?: string;
+  class?: string;
 }
 
 const ImageManager = ({ isOpen, onClose, onInsert }: ImageManagerProps) => {
@@ -22,6 +40,20 @@ const ImageManager = ({ isOpen, onClose, onInsert }: ImageManagerProps) => {
   const [height, setHeight] = useState('');
   const [uploadedImages, setUploadedImages] = useState<{ url: string, name: string }[]>([]);
   const [isUploading, setIsUploading] = useState(false);
+  const [isDragging, setIsDragging] = useState(false);
+  const [selectedRatio, setSelectedRatio] = useState<ImageRatio>("original");
+  const [alignment, setAlignment] = useState("center");
+  
+  const fileInputRef = useRef<HTMLInputElement>(null);
+  const dropZoneRef = useRef<HTMLDivElement>(null);
+
+  const sizeOptions: ImageSizeOption[] = [
+    { id: "original", name: "Original Size" },
+    { id: "1:1", name: "Square (1:1)", class: "aspect-square" },
+    { id: "4:3", name: "Standard (4:3)", class: "aspect-4/3" },
+    { id: "16:9", name: "Widescreen (16:9)", class: "aspect-video" },
+    { id: "banner", name: "Banner (Top)", width: "100%", height: "auto" }
+  ];
 
   const handleInsert = () => {
     if (!imageUrl) {
@@ -29,17 +61,47 @@ const ImageManager = ({ isOpen, onClose, onInsert }: ImageManagerProps) => {
       return;
     }
 
-    const imageHtml = `<img src="${imageUrl}" alt="${altText}" ${width ? `width="${width}"` : ''} ${height ? `height="${height}"` : ''} />`;
-    onInsert(imageHtml);
+    const selectedOption = sizeOptions.find(option => option.id === selectedRatio);
+    
+    let styleAttr = '';
+    let classAttr = '';
+    
+    if (selectedRatio === "original") {
+      // Use custom dimensions if provided
+      if (width || height) {
+        styleAttr = `style="${width ? `width:${width}px;` : ''}${height ? `height:${height}px;` : ''}"`;
+      }
+    } else if (selectedOption) {
+      if (selectedOption.class) {
+        classAttr = `class="${selectedOption.class} ${alignment === 'left' ? 'float-left mr-4' : alignment === 'right' ? 'float-right ml-4' : 'mx-auto block'}"`;
+      } else if (selectedOption.width || selectedOption.height) {
+        styleAttr = `style="${selectedOption.width ? `width:${selectedOption.width};` : ''}${selectedOption.height ? `height:${selectedOption.height};` : ''}${alignment === 'left' ? 'float:left;margin-right:1rem;' : alignment === 'right' ? 'float:right;margin-left:1rem;' : 'display:block;margin:0 auto;'}"`;
+      }
+    }
+
+    // Create a wrapper div for banner images with proper styling
+    if (selectedRatio === "banner") {
+      const imageHtml = `<div style="width:100%;margin-bottom:20px;text-align:center;">
+  <img src="${imageUrl}" alt="${altText}" ${styleAttr} ${classAttr} />
+</div>`;
+      onInsert(imageHtml);
+    } else {
+      // Regular image insert
+      const imageHtml = `<img src="${imageUrl}" alt="${altText}" ${styleAttr} ${classAttr} />`;
+      onInsert(imageHtml);
+    }
+    
     onClose();
   };
 
   const handleFileChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const files = e.target.files;
     if (!files || files.length === 0) return;
-
-    const file = files[0];
     
+    processUploadedFile(files[0]);
+  };
+
+  const processUploadedFile = async (file: File) => {
     // Validate file type
     if (!file.type.startsWith('image/')) {
       toast.error('Please select an image file.');
@@ -50,7 +112,6 @@ const ImageManager = ({ isOpen, onClose, onInsert }: ImageManagerProps) => {
     
     try {
       // Convert to base64 to store locally
-      // In a production app, you'd upload to a server
       const reader = new FileReader();
       reader.onload = (event) => {
         if (event.target && event.target.result) {
@@ -92,47 +153,91 @@ const ImageManager = ({ isOpen, onClose, onInsert }: ImageManagerProps) => {
     setAltText(image.name.split('.')[0]);
   };
 
+  const handleDragEnter = (e: React.DragEvent) => {
+    e.preventDefault();
+    e.stopPropagation();
+    setIsDragging(true);
+  };
+
+  const handleDragOver = (e: React.DragEvent) => {
+    e.preventDefault();
+    e.stopPropagation();
+  };
+
+  const handleDragLeave = (e: React.DragEvent) => {
+    e.preventDefault();
+    e.stopPropagation();
+    setIsDragging(false);
+  };
+
+  const handleDrop = (e: React.DragEvent) => {
+    e.preventDefault();
+    e.stopPropagation();
+    setIsDragging(false);
+    
+    const files = e.dataTransfer.files;
+    if (files.length > 0) {
+      processUploadedFile(files[0]);
+    }
+  };
+
+  const triggerFileInput = () => {
+    fileInputRef.current?.click();
+  };
+
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
-      <DialogContent className="sm:max-w-[525px] animate-fade-in">
+      <DialogContent className="sm:max-w-[600px] max-h-[90vh] overflow-hidden animate-fade-in">
         <DialogHeader>
           <DialogTitle>Insert Image</DialogTitle>
         </DialogHeader>
 
-        <Tabs defaultValue="url" className="w-full">
+        <Tabs defaultValue="upload" className="w-full">
           <TabsList className="grid w-full grid-cols-2">
-            <TabsTrigger value="url">Image URL</TabsTrigger>
             <TabsTrigger value="upload">Upload Image</TabsTrigger>
+            <TabsTrigger value="url">Image URL</TabsTrigger>
           </TabsList>
-          
-          <TabsContent value="url" className="space-y-4">
-            <div className="grid grid-cols-4 items-center gap-4">
-              <Label htmlFor="imageUrl" className="text-right">
-                Image URL
-              </Label>
-              <Input id="imageUrl" value={imageUrl} onChange={(e) => setImageUrl(e.target.value)} className="col-span-3" />
-            </div>
-          </TabsContent>
           
           <TabsContent value="upload" className="space-y-4">
             <div className="grid gap-4">
-              <Label className="text-sm font-medium">Upload Image</Label>
-              <div className="flex items-center gap-2">
-                <Input
-                  type="file"
-                  accept="image/*"
-                  onChange={handleFileChange}
-                  className="flex-1"
-                  disabled={isUploading}
-                />
-                {isUploading && <span className="text-sm text-muted-foreground">Uploading...</span>}
+              <div
+                ref={dropZoneRef}
+                className={`border-2 border-dashed rounded-lg p-6 transition-colors ${
+                  isDragging ? 'border-primary bg-primary/10' : 'border-border'
+                }`}
+                onDragEnter={handleDragEnter}
+                onDragOver={handleDragOver}
+                onDragLeave={handleDragLeave}
+                onDrop={handleDrop}
+                onClick={triggerFileInput}
+              >
+                <div className="flex flex-col items-center justify-center gap-2 text-center cursor-pointer">
+                  <Upload className="h-10 w-10 text-muted-foreground" />
+                  <p className="text-sm font-medium">Drag & drop your image here or click to browse</p>
+                  <p className="text-xs text-muted-foreground">Supports JPEG, PNG, GIF, SVG</p>
+                  <input
+                    ref={fileInputRef}
+                    type="file"
+                    accept="image/*"
+                    onChange={handleFileChange}
+                    className="hidden"
+                    disabled={isUploading}
+                  />
+                </div>
               </div>
+              
+              {isUploading && (
+                <div className="flex items-center justify-center">
+                  <div className="animate-spin rounded-full h-6 w-6 border-b-2 border-primary"></div>
+                  <span className="ml-2 text-sm text-muted-foreground">Uploading...</span>
+                </div>
+              )}
               
               {uploadedImages.length > 0 && (
                 <div className="space-y-2">
-                  <Label className="text-sm font-medium">Uploaded Images</Label>
-                  <ScrollArea className="h-[120px] rounded-md border">
-                    <div className="p-4 grid grid-cols-3 gap-2">
+                  <Label className="text-sm font-medium">Your Images</Label>
+                  <ScrollArea className="h-[150px] rounded-md border">
+                    <div className="p-4 grid grid-cols-4 gap-2">
                       {uploadedImages.map((image, index) => (
                         <div 
                           key={index} 
@@ -151,9 +256,18 @@ const ImageManager = ({ isOpen, onClose, onInsert }: ImageManagerProps) => {
               )}
             </div>
           </TabsContent>
+          
+          <TabsContent value="url" className="space-y-4">
+            <div className="grid grid-cols-4 items-center gap-4">
+              <Label htmlFor="imageUrl" className="text-right">
+                Image URL
+              </Label>
+              <Input id="imageUrl" value={imageUrl} onChange={(e) => setImageUrl(e.target.value)} className="col-span-3" />
+            </div>
+          </TabsContent>
         </Tabs>
 
-        <div className="grid gap-4 py-4">
+        <div className="grid gap-4 py-2">
           <div className="grid grid-cols-4 items-center gap-4">
             <Label htmlFor="altText" className="text-right">
               Alt Text
@@ -162,19 +276,98 @@ const ImageManager = ({ isOpen, onClose, onInsert }: ImageManagerProps) => {
           </div>
 
           <div className="grid grid-cols-4 items-center gap-4">
-            <Label htmlFor="width" className="text-right">
-              Width
+            <Label className="text-right">
+              Size Format
             </Label>
-            <Input id="width" value={width} onChange={(e) => setWidth(e.target.value)} className="col-span-3" placeholder="Optional" />
+            <div className="col-span-3">
+              <Select value={selectedRatio} onValueChange={(value) => setSelectedRatio(value as ImageRatio)}>
+                <SelectTrigger>
+                  <SelectValue placeholder="Select image size" />
+                </SelectTrigger>
+                <SelectContent>
+                  {sizeOptions.map(option => (
+                    <SelectItem key={option.id} value={option.id}>{option.name}</SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
           </div>
 
+          {selectedRatio === "original" && (
+            <>
+              <div className="grid grid-cols-4 items-center gap-4">
+                <Label htmlFor="width" className="text-right">
+                  Width (px)
+                </Label>
+                <Input 
+                  id="width" 
+                  type="number"
+                  value={width} 
+                  onChange={(e) => setWidth(e.target.value)} 
+                  className="col-span-3" 
+                  placeholder="Optional" 
+                />
+              </div>
+
+              <div className="grid grid-cols-4 items-center gap-4">
+                <Label htmlFor="height" className="text-right">
+                  Height (px)
+                </Label>
+                <Input 
+                  id="height" 
+                  type="number"
+                  value={height} 
+                  onChange={(e) => setHeight(e.target.value)} 
+                  className="col-span-3" 
+                  placeholder="Optional" 
+                />
+              </div>
+            </>
+          )}
+
           <div className="grid grid-cols-4 items-center gap-4">
-            <Label htmlFor="height" className="text-right">
-              Height
+            <Label className="text-right">
+              Alignment
             </Label>
-            <Input id="height" value={height} onChange={(e) => setHeight(e.target.value)} className="col-span-3" placeholder="Optional" />
+            <div className="col-span-3">
+              <RadioGroup value={alignment} onValueChange={setAlignment} className="flex space-x-4">
+                <div className="flex items-center space-x-2">
+                  <RadioGroupItem value="left" id="left" />
+                  <Label htmlFor="left">Left</Label>
+                </div>
+                <div className="flex items-center space-x-2">
+                  <RadioGroupItem value="center" id="center" />
+                  <Label htmlFor="center">Center</Label>
+                </div>
+                <div className="flex items-center space-x-2">
+                  <RadioGroupItem value="right" id="right" />
+                  <Label htmlFor="right">Right</Label>
+                </div>
+              </RadioGroup>
+            </div>
           </div>
         </div>
+
+        {imageUrl && (
+          <div className="border rounded-md p-4 mt-2">
+            <Label className="text-sm mb-2 block">Preview</Label>
+            <div className="bg-gray-100 dark:bg-gray-800 p-4 rounded flex justify-center">
+              <img 
+                src={imageUrl} 
+                alt={altText} 
+                className={`max-w-full max-h-40 object-contain ${
+                  selectedRatio === "1:1" ? "aspect-square" : 
+                  selectedRatio === "4:3" ? "aspect-4/3" : 
+                  selectedRatio === "16:9" ? "aspect-video" : ""
+                }`} 
+                style={{
+                  width: selectedRatio === "banner" ? "100%" : width ? `${width}px` : "auto",
+                  height: height ? `${height}px` : "auto"
+                }}
+              />
+            </div>
+          </div>
+        )}
 
         <div className="flex justify-end space-x-2">
           <Button variant="secondary" onClick={onClose}>Cancel</Button>
