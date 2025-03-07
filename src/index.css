@@ -114,12 +114,16 @@
   display: grid;
   grid-template-rows: 1fr auto; /* Editor area + AI chat area */
   height: 100%;
+  overflow: hidden;
 }
 
-/* AI chat area - sticky to the bottom */
+/* AI chat area */
 .ai-chat-area {
-  @apply border-t border-border/40 bg-black/5;
-  height: 250px; /* Fixed height for the chat area */
+  position: relative;
+  overflow: hidden;
+  min-height: 150px;
+  max-height: 500px;
+  transition: height 0.2s ease;
 }
 
 /* Screen size utilities */

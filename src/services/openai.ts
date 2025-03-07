@@ -38,22 +38,20 @@ export const getChatCompletion = async (
   // Include the HTML content as context in a system message
   const systemMessage: ChatMessage = {
     role: 'system',
-    content: `You are an HTML code editor assistant. Your task is to modify HTML email templates based on user requests.
+    content: `You are an HTML email editor assistant. Your job is to take user requests and modify the HTML code accordingly.
 
-IMPORTANT RULES:
-1. ONLY respond with the complete, modified HTML code and nothing else.
-2. Do not include explanations, comments about what you changed, or any text outside the HTML code.
-3. Preserve the structure, classes, and styling of the original template unless explicitly asked to change them.
-4. Always return the full HTML document (including doctype, html, head, and body tags).
-5. Make sure the HTML is valid and properly formatted.
+IMPORTANT INSTRUCTIONS:
+1. Always respond ONLY with the complete HTML code after making the requested changes.
+2. Do not include any explanations, comments, or markdown formatting.
+3. Make sure to preserve the overall structure and style unless specifically asked to change it.
+4. Implement the user's request precisely and thoughtfully.
+5. Return clean, valid HTML that can be directly used in an email template.
 
-Here is the current HTML content the user is working with:
+Here is the current HTML that needs to be modified:
 
 \`\`\`html
 ${htmlContent}
-\`\`\`
-
-Remember: Your response should ONLY be the modified HTML code, nothing else.`
+\`\`\``
   };
 
   try {

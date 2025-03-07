@@ -1,6 +1,6 @@
 
 import { useState, useRef, useEffect } from 'react';
-import { Send, Bot, User, RefreshCcw, Shield, Loader2, Code } from 'lucide-react';
+import { Send, Bot, User, RefreshCcw, Shield, Loader2, Code, GripVertical } from 'lucide-react';
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { ScrollArea } from "@/components/ui/scroll-area";
@@ -31,13 +31,55 @@ const AIChat = ({ htmlContent, onUpdateHtml }: AIChatProps) => {
   const [loading, setLoading] = useState(false);
   const [isKeyDialogOpen, setIsKeyDialogOpen] = useState(false);
   const [showVariables, setShowVariables] = useState(false);
+  const [chatHeight, setChatHeight] = useState(250);
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLInputElement>(null);
+  const resizerRef = useRef<HTMLDivElement>(null);
+  const isResizingRef = useRef(false);
 
   // Scroll to bottom when messages change
   useEffect(() => {
     messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
   }, [messages]);
+
+  // Handle chat area resizing
+  useEffect(() => {
+    const resizer = resizerRef.current;
+    if (!resizer) return;
+
+    const onMouseDown = (e: MouseEvent) => {
+      e.preventDefault();
+      isResizingRef.current = true;
+      document.addEventListener('mousemove', onMouseMove);
+      document.addEventListener('mouseup', onMouseUp);
+      document.body.style.cursor = 'row-resize';
+    };
+
+    const onMouseMove = (e: MouseEvent) => {
+      if (!isResizingRef.current) return;
+      
+      // Calculate height based on mouse position from bottom of container
+      const containerRect = resizer.parentElement?.getBoundingClientRect();
+      if (containerRect) {
+        const newHeight = Math.max(150, Math.min(500, containerRect.bottom - e.clientY));
+        setChatHeight(newHeight);
+      }
+    };
+
+    const onMouseUp = () => {
+      isResizingRef.current = false;
+      document.removeEventListener('mousemove', onMouseMove);
+      document.removeEventListener('mouseup', onMouseUp);
+      document.body.style.cursor = '';
+    };
+
+    resizer.addEventListener('mousedown', onMouseDown);
+    return () => {
+      resizer.removeEventListener('mousedown', onMouseDown);
+      document.removeEventListener('mousemove', onMouseMove);
+      document.removeEventListener('mouseup', onMouseUp);
+    };
+  }, []);
 
   const handleSendMessage = async () => {
     if (!inputValue.trim()) return;
@@ -77,27 +119,16 @@ const AIChat = ({ htmlContent, onUpdateHtml }: AIChatProps) => {
       const response = await getChatCompletion(apiMessages, htmlContent);
       
       if (response) {
-        // Check if the response is valid HTML
-        if (response.trim().startsWith('<!DOCTYPE') || response.trim().startsWith('<html') || response.trim().startsWith('<!') || response.trim().startsWith('<head')) {
-          // This looks like valid HTML - update the editor
-          onUpdateHtml(response);
-          
-          // Add a simplified response to the chat
-          const aiResponse: Message = {
-            role: 'assistant',
-            content: 'HTML updated according to your request.',
-            timestamp: new Date()
-          };
-          setMessages(prev => [...prev, aiResponse]);
-        } else {
-          // The response doesn't look like complete HTML
-          const aiResponse: Message = {
-            role: 'assistant',
-            content: 'I received a response, but it doesn\'t appear to be valid HTML. Please try rephrasing your request.',
-            timestamp: new Date()
-          };
-          setMessages(prev => [...prev, aiResponse]);
-        }
+        // Update the HTML editor with the response
+        onUpdateHtml(response);
+        
+        // Add confirmation to the chat
+        const aiResponse: Message = {
+          role: 'assistant',
+          content: 'HTML updated according to your request.',
+          timestamp: new Date()
+        };
+        setMessages(prev => [...prev, aiResponse]);
       }
     } catch (error) {
       toast.error('Failed to update HTML');
@@ -124,6 +155,16 @@ const AIChat = ({ htmlContent, onUpdateHtml }: AIChatProps) => {
 
   return (
     <div className="flex flex-col h-full">
+      <div 
+        ref={resizerRef}
+        className="w-full h-1 bg-border/30 cursor-row-resize hover:bg-primary/50 hover:h-1.5 -mt-1 transition-all"
+        title="Drag to resize"
+      >
+        <div className="flex justify-center items-center h-full">
+          <GripVertical className="h-3 w-3 text-muted-foreground/60" />
+        </div>
+      </div>
+      
       <div className="p-2 border-b border-border/40 bg-black/10 flex justify-between items-center">
         <h2 className="text-sm font-semibold flex items-center">
           <Bot className="mr-2 h-4 w-4" />
@@ -154,7 +195,7 @@ const AIChat = ({ htmlContent, onUpdateHtml }: AIChatProps) => {
       {showVariables ? (
         <VariableManager htmlContent={htmlContent} onUpdateHtml={onUpdateHtml} />
       ) : (
-        <div className="flex-1 flex flex-col p-0">
+        <div className="flex-1 flex flex-col p-0" style={{ height: `${chatHeight}px` }}>
           <ScrollArea className="flex-1 p-2">
             <div className="space-y-2">
               {messages.map((message, index) => (
