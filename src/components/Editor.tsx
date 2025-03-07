@@ -31,7 +31,8 @@ export const Editor = ({ value, onChange, isDarkMode }: EditorProps) => {
         fontFamily: "monospace",
       },
       ".cm-content": {
-        padding: "10px"
+        padding: "10px",
+        color: "#E06C75"
       },
       ".cm-line": {
         padding: "0 4px"
@@ -51,10 +52,6 @@ export const Editor = ({ value, onChange, isDarkMode }: EditorProps) => {
       // Text content in bright green - more visible
       ".cm-text": {
         color: "#98C379"
-      },
-      // Special emphasis for content
-      ".cm-content": {
-        color: "#E06C75"
       },
       // Comments in muted gray
       ".cm-comment": {

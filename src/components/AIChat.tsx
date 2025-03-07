@@ -89,42 +89,42 @@ const AIChat = ({ htmlContent, onUpdateHtml }: AIChatProps) => {
   };
 
   return (
-    <div className="flex flex-col h-full bg-background border-r border-border/40">
-      <div className="p-4 border-b border-border/40 bg-black/10">
-        <h2 className="text-lg font-semibold flex items-center">
-          <Bot className="mr-2 h-5 w-5" />
+    <div className="flex flex-col h-full">
+      <div className="p-2 border-b border-border/40 bg-black/10">
+        <h2 className="text-sm font-semibold flex items-center">
+          <Bot className="mr-2 h-4 w-4" />
           AI Assistant
         </h2>
       </div>
       
       <Tabs defaultValue="chat" className="flex flex-col flex-1">
-        <TabsList className="mx-4 my-2">
-          <TabsTrigger value="chat">Chat</TabsTrigger>
-          <TabsTrigger value="variables">Variables</TabsTrigger>
+        <TabsList className="mx-2 my-1 h-8">
+          <TabsTrigger value="chat" className="text-xs">Chat</TabsTrigger>
+          <TabsTrigger value="variables" className="text-xs">Variables</TabsTrigger>
         </TabsList>
         
-        <TabsContent value="chat" className="flex-1 flex flex-col">
-          <ScrollArea className="flex-1 p-4">
-            <div className="space-y-4">
+        <TabsContent value="chat" className="flex-1 flex flex-col p-0">
+          <ScrollArea className="flex-1 p-2">
+            <div className="space-y-2">
               {messages.map((message, index) => (
                 <div 
                   key={index} 
                   className={`flex ${message.role === 'user' ? 'justify-end' : 'justify-start'}`}
                 >
                   <div 
-                    className={`max-w-[85%] px-3 py-2 rounded-lg ${
+                    className={`max-w-[85%] px-2 py-1 rounded-lg text-xs ${
                       message.role === 'user' 
                         ? 'bg-primary/10 text-primary-foreground/90 rounded-tr-none' 
                         : 'bg-muted rounded-tl-none'
                     }`}
                   >
-                    <div className="flex items-center gap-2 mb-1 text-xs opacity-70">
+                    <div className="flex items-center gap-1 mb-1 text-xs opacity-70">
                       {message.role === 'user' ? 
                         <><span>You</span><User className="h-3 w-3" /></> : 
                         <><Bot className="h-3 w-3" /><span>Assistant</span></>
                       }
                     </div>
-                    <p className="whitespace-pre-wrap text-sm">{message.content}</p>
+                    <p className="whitespace-pre-wrap">{message.content}</p>
                     <div className="text-xs opacity-50 mt-1 text-right">
                       {message.timestamp.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
                     </div>
@@ -135,15 +135,16 @@ const AIChat = ({ htmlContent, onUpdateHtml }: AIChatProps) => {
             </div>
           </ScrollArea>
           
-          <div className="p-4 border-t border-border/40 bg-black/5">
+          <div className="p-2 border-t border-border/40 bg-black/5">
             <div className="flex space-x-2">
               <Button 
                 variant="outline" 
                 size="icon" 
                 onClick={clearConversation}
                 title="Clear conversation"
+                className="h-8 w-8"
               >
-                <RefreshCcw className="h-4 w-4" />
+                <RefreshCcw className="h-3 w-3" />
               </Button>
               <Input
                 ref={inputRef}
@@ -152,14 +153,15 @@ const AIChat = ({ htmlContent, onUpdateHtml }: AIChatProps) => {
                 onKeyDown={handleKeyDown}
                 placeholder="Ask about your email template..."
                 disabled={loading}
-                className="flex-1"
+                className="flex-1 h-8 text-sm"
               />
               <Button 
                 onClick={handleSendMessage} 
                 disabled={loading || !inputValue.trim()}
                 size="icon"
+                className="h-8 w-8"
               >
-                <Send className="h-4 w-4" />
+                <Send className="h-3 w-3" />
               </Button>
             </div>
           </div>

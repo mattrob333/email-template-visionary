@@ -239,7 +239,7 @@ const Index = () => {
   }, []);
 
   return (
-    <div className={`min-h-screen flex flex-col ${isDarkMode ? 'dark' : ''}`}>
+    <div className={`h-screen flex flex-col ${isDarkMode ? 'dark' : ''}`}>
       <Navbar 
         htmlContent={htmlContent}
         isDarkMode={isDarkMode}
@@ -256,35 +256,27 @@ const Index = () => {
         toggleAIChat={toggleAIChat}
       />
       
-      <main className="flex-1 container mx-auto p-4 pt-6 xl:max-w-[1600px] 2xl:max-w-[1800px]">
-        <div className="editor-container rounded-lg overflow-hidden glass-panel" ref={containerRef}>
+      <main className="flex-1 container mx-auto p-4 xl:max-w-[1600px] 2xl:max-w-[1800px] overflow-hidden">
+        <div className="h-full rounded-lg overflow-hidden glass-panel" ref={containerRef}>
           <div className="flex h-full">
             <div 
-              className="h-full transition-all-medium" 
+              className="h-full transition-all-medium editor-preview-layout" 
               style={{ width: `${editorWidth}%` }}
             >
-              {showAIChat ? (
-                <AIChat 
-                  htmlContent={htmlContent} 
-                  onUpdateHtml={setHtmlContent} 
-                />
-              ) : (
+              <div className="overflow-auto">
                 <Editor 
                   value={htmlContent} 
                   onChange={setHtmlContent} 
                   isDarkMode={isDarkMode}
                 />
-              )}
+              </div>
               
-              <Button
-                className="absolute left-4 bottom-4 z-10 opacity-80 hover:opacity-100"
-                size="sm"
-                variant="secondary"
-                onClick={toggleAIChat}
-              >
-                {showAIChat ? <Code className="mr-2 h-4 w-4" /> : <MessageSquare className="mr-2 h-4 w-4" />}
-                {showAIChat ? 'Edit Code' : 'AI Chat'}
-              </Button>
+              <div className="ai-chat-area">
+                <AIChat 
+                  htmlContent={htmlContent} 
+                  onUpdateHtml={setHtmlContent} 
+                />
+              </div>
             </div>
             
             <div 
