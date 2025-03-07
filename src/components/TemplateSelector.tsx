@@ -1,8 +1,12 @@
+
 import React, { useState } from 'react';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Card, CardContent } from "@/components/ui/card";
+import { Button } from "@/components/ui/button";
+import { toast } from "sonner";
+import { Copy } from "lucide-react";
 import { GmailTemplate, gmailSignatureTemplates } from './GmailTemplates';
 
 interface TemplateData {
@@ -367,6 +371,17 @@ const TemplateSelector = ({ isOpen, onClose, onSelect }: TemplateSelectorProps) 
     onClose();
   };
 
+  const copyToClipboard = (html: string) => {
+    navigator.clipboard.writeText(html)
+      .then(() => {
+        toast.success("Gmail signature copied to clipboard!");
+      })
+      .catch((err) => {
+        console.error("Failed to copy: ", err);
+        toast.error("Failed to copy to clipboard");
+      });
+  };
+
   return (
     <Dialog open={isOpen} onOpenChange={(open) => !open && onClose()}>
       <DialogContent className="sm:max-w-[900px] h-[80vh] max-h-[700px] animate-fade-in">
@@ -444,7 +459,6 @@ const TemplateSelector = ({ isOpen, onClose, onSelect }: TemplateSelectorProps) 
                   <Card 
                     key={template.id}
                     className="cursor-pointer overflow-hidden transition-all duration-200 hover:shadow-md"
-                    onClick={() => handleTemplateSelect(template)}
                   >
                     <div className="relative pb-[150%] overflow-hidden bg-muted">
                       <div 
@@ -454,10 +468,22 @@ const TemplateSelector = ({ isOpen, onClose, onSelect }: TemplateSelectorProps) 
                           backgroundSize: 'cover',
                           backgroundPosition: 'center',
                         }}
+                        onClick={() => handleTemplateSelect(template)}
                       />
                     </div>
-                    <CardContent className="p-3">
+                    <CardContent className="p-3 flex justify-between items-center">
                       <h3 className="font-medium">{template.name}</h3>
+                      <Button 
+                        variant="outline" 
+                        size="sm" 
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          copyToClipboard(template.html);
+                        }}
+                      >
+                        <Copy className="w-4 h-4 mr-1" />
+                        Copy
+                      </Button>
                     </CardContent>
                   </Card>
                 ))}
