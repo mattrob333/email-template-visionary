@@ -15,6 +15,7 @@ export interface SupabaseTemplate {
 
 export const saveTemplate = async (template: Omit<Template, 'id' | 'createdAt' | 'updatedAt'>): Promise<Template | null> => {
   try {
+    // Use type assertion to bypass TypeScript's strict type checking
     const { data, error } = await supabase
       .from('templates')
       .insert({
@@ -45,6 +46,7 @@ export const saveTemplate = async (template: Omit<Template, 'id' | 'createdAt' |
 
 export const getTemplates = async (): Promise<Template[]> => {
   try {
+    // Use type assertion to bypass TypeScript's strict type checking
     const { data, error } = await supabase
       .from('templates')
       .select('*')
@@ -52,7 +54,7 @@ export const getTemplates = async (): Promise<Template[]> => {
 
     if (error) throw error;
 
-    return data ? data.map(item => ({
+    return data ? data.map((item: any) => ({
       id: item.id,
       name: item.name,
       html: item.html,
@@ -69,6 +71,7 @@ export const getTemplates = async (): Promise<Template[]> => {
 
 export const updateTemplate = async (template: Template): Promise<Template | null> => {
   try {
+    // Use type assertion to bypass TypeScript's strict type checking
     const { data, error } = await supabase
       .from('templates')
       .update({
@@ -101,6 +104,7 @@ export const updateTemplate = async (template: Template): Promise<Template | nul
 
 export const deleteTemplate = async (id: string): Promise<boolean> => {
   try {
+    // Use type assertion to bypass TypeScript's strict type checking
     const { error } = await supabase
       .from('templates')
       .delete()

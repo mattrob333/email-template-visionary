@@ -30,6 +30,36 @@ export type Database = {
         }
         Relationships: []
       }
+      templates: {
+        Row: {
+          category: string
+          created_at: string
+          html: string
+          id: string
+          name: string
+          thumbnail: string | null
+          updated_at: string
+        }
+        Insert: {
+          category: string
+          created_at?: string
+          html: string
+          id?: string
+          name: string
+          thumbnail?: string | null
+          updated_at?: string
+        }
+        Update: {
+          category?: string
+          created_at?: string
+          html?: string
+          id?: string
+          name?: string
+          thumbnail?: string | null
+          updated_at?: string
+        }
+        Relationships: []
+      }
     }
     Views: {
       [_ in never]: never
