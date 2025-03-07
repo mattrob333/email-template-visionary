@@ -8,11 +8,20 @@ import {
   LayoutGrid,
   Sun,
   Moon,
-  Settings,
+  FileDown,
+  Image,
+  Paintbrush,
+  Printer,
+  ToggleLeft,
+  ToggleRight
 } from "lucide-react";
-import { copyToClipboard, openInGmail } from '../utils/exportUtils';
+import { copyToClipboard, copyRenderedContent, exportAsPdf } from '../utils/exportUtils';
 import { toast } from 'sonner';
-import { TemplateModal } from './TemplateModal';
+import { TemplateModal, Template } from './TemplateModal';
+import PrintOptions, { PrintSettings } from './PrintOptions';
+import TemplateSelector from './TemplateSelector';
+import ImageManager from './ImageManager';
+import ColorPicker from './ColorPicker';
 
 interface NavbarProps {
   htmlContent: string;
@@ -20,6 +29,13 @@ interface NavbarProps {
   toggleDarkMode: () => void;
   onSaveTemplate: () => void;
   onLoadTemplate: () => void;
+  onLoadNewTemplate: (html: string) => void;
+  onInsertImage: (imageHtml: string) => void;
+  previewRef: React.RefObject<any>;
+  previewMode: 'email' | 'print';
+  togglePreviewMode: () => void;
+  onExportPdf: (options: PrintSettings) => void;
+  onColorSelect: (color: string) => void;
 }
 
 const Navbar = ({ 
@@ -27,22 +43,37 @@ const Navbar = ({
   isDarkMode, 
   toggleDarkMode, 
   onSaveTemplate, 
-  onLoadTemplate 
+  onLoadTemplate,
+  onLoadNewTemplate,
+  onInsertImage,
+  previewRef,
+  previewMode,
+  togglePreviewMode,
+  onExportPdf,
+  onColorSelect
 }: NavbarProps) => {
   const [isTemplateModalOpen, setIsTemplateModalOpen] = useState(false);
+  const [isPrintOptionsOpen, setIsPrintOptionsOpen] = useState(false);
+  const [isTemplateSelectorOpen, setIsTemplateSelectorOpen] = useState(false);
+  const [isImageManagerOpen, setIsImageManagerOpen] = useState(false);
+  const [isColorPickerOpen, setIsColorPickerOpen] = useState(false);
 
-  const handleCopyToClipboard = async () => {
-    const success = await copyToClipboard(htmlContent);
+  const handleCopyForGmail = async () => {
+    if (!previewRef.current) {
+      toast.error('Preview not available');
+      return;
+    }
+    
+    const success = await copyRenderedContent(previewRef.current.getIframeRef());
     if (success) {
-      toast.success('HTML copied to clipboard!');
+      toast.success('Content copied for Gmail! Paste into your compose window');
     } else {
-      toast.error('Failed to copy HTML');
+      toast.error('Failed to copy content');
     }
   };
 
-  const handleOpenInGmail = () => {
-    openInGmail(htmlContent);
-    toast.success('Opening Gmail compose window...');
+  const handleExportPdf = () => {
+    setIsPrintOptionsOpen(true);
   };
 
   return (
@@ -52,19 +83,58 @@ const Navbar = ({
           <div className="flex items-center gap-2">
             <Mail className="h-6 w-6 text-primary" />
             <h1 className="text-xl font-semibold tracking-tight">
-              HTML Email Editor
+              HTML {previewMode === 'email' ? 'Email' : 'Flyer'} Designer
             </h1>
           </div>
           
-          <div className="flex items-center gap-4">
+          <div className="flex items-center gap-3">
             <Button 
               variant="outline" 
               size="sm" 
               className="transition-all-fast"
-              onClick={() => setIsTemplateModalOpen(true)}
+              onClick={togglePreviewMode}
+            >
+              {previewMode === 'email' ? (
+                <>
+                  <Printer className="mr-2 h-4 w-4" />
+                  Switch to Print Mode
+                </>
+              ) : (
+                <>
+                  <Mail className="mr-2 h-4 w-4" />
+                  Switch to Email Mode
+                </>
+              )}
+            </Button>
+            
+            <Button 
+              variant="outline" 
+              size="sm" 
+              className="transition-all-fast"
+              onClick={() => setIsTemplateSelectorOpen(true)}
             >
               <LayoutGrid className="mr-2 h-4 w-4" />
               Templates
+            </Button>
+            
+            <Button 
+              variant="outline" 
+              size="sm" 
+              className="transition-all-fast"
+              onClick={() => setIsImageManagerOpen(true)}
+            >
+              <Image className="mr-2 h-4 w-4" />
+              Images
+            </Button>
+            
+            <Button 
+              variant="outline" 
+              size="sm" 
+              className="transition-all-fast"
+              onClick={() => setIsColorPickerOpen(true)}
+            >
+              <Paintbrush className="mr-2 h-4 w-4" />
+              Colors
             </Button>
             
             <Button 
@@ -77,25 +147,27 @@ const Navbar = ({
               Save
             </Button>
             
-            <Button 
-              variant="outline" 
-              size="sm" 
-              className="transition-all-fast"
-              onClick={handleCopyToClipboard}
-            >
-              <Copy className="mr-2 h-4 w-4" />
-              Copy HTML
-            </Button>
-            
-            <Button 
-              variant="outline" 
-              size="sm" 
-              className="transition-all-fast"
-              onClick={handleOpenInGmail}
-            >
-              <Mail className="mr-2 h-4 w-4" />
-              Gmail
-            </Button>
+            {previewMode === 'email' ? (
+              <Button 
+                variant="outline" 
+                size="sm" 
+                className="transition-all-fast"
+                onClick={handleCopyForGmail}
+              >
+                <Copy className="mr-2 h-4 w-4" />
+                Copy for Gmail
+              </Button>
+            ) : (
+              <Button 
+                variant="outline" 
+                size="sm" 
+                className="transition-all-fast"
+                onClick={handleExportPdf}
+              >
+                <FileDown className="mr-2 h-4 w-4" />
+                Export PDF
+              </Button>
+            )}
             
             <Button
               variant="ghost" 
@@ -118,6 +190,32 @@ const Navbar = ({
         isOpen={isTemplateModalOpen} 
         onClose={() => setIsTemplateModalOpen(false)}
         onSelect={onLoadTemplate}
+      />
+      
+      <PrintOptions
+        isOpen={isPrintOptionsOpen}
+        onClose={() => setIsPrintOptionsOpen(false)}
+        onExport={onExportPdf}
+      />
+      
+      <TemplateSelector
+        isOpen={isTemplateSelectorOpen}
+        onClose={() => setIsTemplateSelectorOpen(false)}
+        onSelect={onLoadNewTemplate}
+      />
+      
+      <ImageManager
+        isOpen={isImageManagerOpen}
+        onClose={() => setIsImageManagerOpen(false)}
+        onInsertImage={onInsertImage}
+      />
+      
+      <ColorPicker
+        isOpen={isColorPickerOpen}
+        onClose={() => setIsColorPickerOpen(false)}
+        onSelectColor={onColorSelect}
+        initialColor="#3b82f6"
+        isPrintMode={previewMode === 'print'}
       />
     </>
   );

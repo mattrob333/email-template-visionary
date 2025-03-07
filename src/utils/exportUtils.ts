@@ -38,3 +38,114 @@ export const sanitizeHtml = (html: string): string => {
     .replace(/on\w+="[^"]*"/g, '')
     .replace(/on\w+='[^']*'/g, '');
 };
+
+/**
+ * Copies the rendered HTML content for Gmail
+ */
+export const copyRenderedContent = async (iframeRef: React.RefObject<HTMLIFrameElement>): Promise<boolean> => {
+  try {
+    if (!iframeRef.current) return false;
+    
+    const iframeDocument = iframeRef.current.contentDocument || iframeRef.current.contentWindow?.document;
+    if (!iframeDocument) return false;
+    
+    // Get the HTML content as a string
+    const htmlContent = iframeDocument.documentElement.outerHTML;
+    
+    // Create a blob with HTML content
+    const blob = new Blob([htmlContent], { type: 'text/html' });
+    
+    // Create a ClipboardItem with HTML content
+    const data = [new ClipboardItem({ 'text/html': blob })];
+    
+    // Use the clipboard API to write the HTML content
+    await navigator.clipboard.write(data);
+    return true;
+  } catch (err) {
+    console.error('Failed to copy rendered content: ', err);
+    return false;
+  }
+};
+
+/**
+ * Export HTML content as PDF
+ */
+export const exportAsPdf = async (
+  iframeRef: React.RefObject<HTMLIFrameElement>, 
+  options: {
+    pageSize: 'letter' | 'a4',
+    orientation: 'portrait' | 'landscape',
+    filename: string
+  }
+): Promise<boolean> => {
+  try {
+    if (!iframeRef.current) return false;
+    
+    const iframe = iframeRef.current;
+    const document = iframe.contentDocument || iframe.contentWindow?.document;
+    
+    if (!document) return false;
+    
+    // Import html2pdf dynamically
+    const html2pdf = (await import('html2pdf.js')).default;
+    
+    // Configure pdf options
+    const opts = {
+      margin: 10,
+      filename: options.filename || 'email-template.pdf',
+      image: { type: 'jpeg', quality: 0.98 },
+      html2canvas: { scale: 2, useCORS: true },
+      jsPDF: {
+        unit: 'mm',
+        format: options.pageSize || 'letter',
+        orientation: options.orientation || 'portrait'
+      }
+    };
+    
+    // Generate PDF from document body
+    await html2pdf().from(document.body).set(opts).save();
+    return true;
+  } catch (err) {
+    console.error('Failed to export as PDF: ', err);
+    return false;
+  }
+};
+
+/**
+ * Generate a QR code data URL
+ */
+export const generateQRCode = async (text: string, size = 300): Promise<string> => {
+  try {
+    const QRCode = (await import('qrcode')).default;
+    return await QRCode.toDataURL(text, {
+      width: size,
+      margin: 1,
+      color: {
+        dark: '#000000',
+        light: '#ffffff'
+      }
+    });
+  } catch (err) {
+    console.error('Failed to generate QR code: ', err);
+    return '';
+  }
+};
+
+/**
+ * Basic color validation for print
+ */
+export const isPrintSafeColor = (hex: string): boolean => {
+  // Basic check for CMYK-safe colors (simplified)
+  // In reality, this would be more complex with proper CMYK conversion
+  const r = parseInt(hex.slice(1, 3), 16);
+  const g = parseInt(hex.slice(3, 5), 16);
+  const b = parseInt(hex.slice(5, 7), 16);
+  
+  // Colors that are too saturated might not print well
+  const isTooSaturated = 
+    (r > 240 && g < 50 && b < 50) || // Very bright red
+    (r < 50 && g > 240 && b < 50) || // Very bright green
+    (r < 50 && g < 50 && b > 240);   // Very bright blue
+    
+  return !isTooSaturated;
+};
