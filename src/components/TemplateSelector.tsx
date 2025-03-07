@@ -1,5 +1,6 @@
+
 import React, { useState } from 'react';
-import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from "@/components/ui/dialog";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Card, CardContent } from "@/components/ui/card";
@@ -387,6 +388,9 @@ const TemplateSelector = ({ isOpen, onClose, onSelect }: TemplateSelectorProps) 
       <DialogContent className="sm:max-w-[900px] h-[80vh] max-h-[700px] animate-fade-in">
         <DialogHeader>
           <DialogTitle className="text-xl">Choose a Template</DialogTitle>
+          <DialogDescription>
+            Select a template to use as a starting point for your design
+          </DialogDescription>
         </DialogHeader>
         
         <Tabs defaultValue="email" value={activeTab} onValueChange={setActiveTab} className="w-full">
@@ -402,10 +406,10 @@ const TemplateSelector = ({ isOpen, onClose, onSelect }: TemplateSelectorProps) 
                 {emailTemplates.map((template) => (
                   <Card 
                     key={template.id}
-                    className="cursor-pointer overflow-hidden transition-all duration-200 hover:shadow-md"
+                    className="cursor-pointer overflow-hidden transition-all duration-200 hover:shadow-md h-full"
                     onClick={() => handleTemplateSelect(template)}
                   >
-                    <div className="relative pb-[150%] overflow-hidden bg-muted">
+                    <div className="relative pb-[56.25%] overflow-hidden bg-muted">
                       <div 
                         className="absolute inset-0 hover:scale-105 transition-transform duration-200"
                         style={{
@@ -430,10 +434,10 @@ const TemplateSelector = ({ isOpen, onClose, onSelect }: TemplateSelectorProps) 
                 {printTemplates.map((template) => (
                   <Card 
                     key={template.id}
-                    className="cursor-pointer overflow-hidden transition-all duration-200 hover:shadow-md"
+                    className="cursor-pointer overflow-hidden transition-all duration-200 hover:shadow-md h-full"
                     onClick={() => handleTemplateSelect(template)}
                   >
-                    <div className="relative pb-[150%] overflow-hidden bg-muted">
+                    <div className="relative pb-[56.25%] overflow-hidden bg-muted">
                       <div 
                         className="absolute inset-0 hover:scale-105 transition-transform duration-200"
                         style={{

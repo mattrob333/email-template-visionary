@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter, DialogDescription } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -211,6 +211,9 @@ export const TemplateModal = ({ isOpen, onClose, onSelect, currentHtml, previewR
           <>
             <DialogHeader>
               <DialogTitle>{editingTemplate ? 'Edit Template' : 'Create New Template'}</DialogTitle>
+              <DialogDescription>
+                {editingTemplate ? 'Update your template details below.' : 'Save your current design as a template for future use.'}
+              </DialogDescription>
             </DialogHeader>
             <div className="grid gap-4 py-4">
               <div className="grid gap-2">
@@ -277,6 +280,9 @@ export const TemplateModal = ({ isOpen, onClose, onSelect, currentHtml, previewR
                   </Button>
                 </div>
               </DialogTitle>
+              <DialogDescription>
+                Browse and manage your saved templates or create new ones.
+              </DialogDescription>
             </DialogHeader>
             
             <Tabs defaultValue="all" value={activeTab} onValueChange={setActiveTab} className="w-full">
@@ -304,22 +310,22 @@ export const TemplateModal = ({ isOpen, onClose, onSelect, currentHtml, previewR
                     {templates.map((template) => (
                       <Card 
                         key={template.id}
-                        className={`cursor-pointer overflow-hidden transition-all duration-200 hover:shadow-md ${
+                        className={`cursor-pointer overflow-hidden transition-all duration-200 hover:shadow-md h-full ${
                           template.id.startsWith('default-') ? 'border-blue-200' : ''
                         }`}
                         onClick={() => onSelect(template)}
                       >
-                        <div className="relative p-4 border-b bg-muted/50">
+                        <div className="relative pb-[56.25%] overflow-hidden bg-muted/50">
                           {template.thumbnail ? (
-                            <div className="h-24 overflow-hidden flex items-center justify-center">
+                            <div className="h-full overflow-hidden flex items-center justify-center">
                               <img 
                                 src={template.thumbnail} 
                                 alt={template.name} 
-                                className="max-h-full max-w-full object-contain"
+                                className="w-full h-full object-cover"
                               />
                             </div>
                           ) : (
-                            <div className="h-24 overflow-hidden text-xs opacity-70">
+                            <div className="absolute inset-0 p-4 text-xs opacity-70 overflow-hidden">
                               {template.html.substring(0, 200)}...
                             </div>
                           )}
