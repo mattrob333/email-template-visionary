@@ -1,7 +1,6 @@
-
 import { useState, useEffect, useRef } from 'react';
 import Navbar from '../components/Navbar';
-import Editor from '../components/Editor';
+import { Editor } from '../components/Editor';
 import Preview, { PreviewRef } from '../components/Preview';
 import { Template } from '../components/TemplateModal';
 import { useLocalStorage } from '../hooks/useLocalStorage';
@@ -133,6 +132,7 @@ const Index = () => {
       id: Date.now().toString(),
       name: templateName,
       html: htmlContent,
+      category: 'email',
       createdAt: new Date().toISOString(),
       updatedAt: new Date().toISOString(),
     };

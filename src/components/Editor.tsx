@@ -1,8 +1,9 @@
+
 import { useState, useRef, useEffect } from 'react';
 import { Editor as TinyMCEEditor } from '@tinymce/tinymce-react';
 import { Button } from "@/components/ui/button";
 import { TemplateModal, Template } from './TemplateModal';
-import { TemplateSelector } from './TemplateSelector';
+import TemplateSelector from './TemplateSelector';
 import { toast } from 'sonner';
 import { Save, FileDown, FileUp, Code, Layout } from 'lucide-react';
 
@@ -159,3 +160,5 @@ export const Editor = () => {
     </div>
   );
 };
+
+export default Editor;

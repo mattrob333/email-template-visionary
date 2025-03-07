@@ -1,21 +1,16 @@
 
-import { useState, useEffect } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
-import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { ScrollArea } from "@/components/ui/scroll-area";
+import { Card, CardContent } from "@/components/ui/card";
+import { Copy, Search, Edit, Trash2, Plus } from "lucide-react";
 import { useLocalStorage } from '../hooks/useLocalStorage';
-import { Card, CardContent, CardFooter } from "@/components/ui/card";
-import { Trash, Edit, Plus, Copy, FileIcon } from "lucide-react";
 import { toast } from 'sonner';
-import { 
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 
 export interface Template {
   id: string;
@@ -24,382 +19,321 @@ export interface Template {
   category: string;
   createdAt: string;
   updatedAt: string;
-  isDefault?: boolean;
 }
+
+const defaultTemplates: Template[] = [
+  {
+    id: "default-email-1",
+    name: "Simple Newsletter",
+    html: `<!DOCTYPE html><html><head><title>Simple Newsletter</title></head><body><h1>My Newsletter</h1><p>Welcome to my newsletter!</p></body></html>`,
+    category: "email",
+    createdAt: new Date().toISOString(),
+    updatedAt: new Date().toISOString(),
+  },
+  {
+    id: "default-email-2",
+    name: "Product Announcement",
+    html: `<!DOCTYPE html><html><head><title>Product Announcement</title></head><body><h1>New Product!</h1><p>Check out our latest product.</p></body></html>`,
+    category: "email",
+    createdAt: new Date().toISOString(),
+    updatedAt: new Date().toISOString(),
+  },
+  {
+    id: "default-print-1",
+    name: "Business Letter",
+    html: `<!DOCTYPE html><html><head><title>Business Letter</title></head><body><div style="font-family: serif;"><h1>Company Name</h1><p>Dear Sir/Madam,</p><p>Business letter content goes here.</p><p>Sincerely,</p><p>John Doe</p></div></body></html>`,
+    category: "print",
+    createdAt: new Date().toISOString(),
+    updatedAt: new Date().toISOString(),
+  },
+  {
+    id: "default-gmail-1",
+    name: "Professional Signature",
+    html: `<div style="font-family: Arial, sans-serif; font-size: 12px; color: #333;"><p>John Doe</p><p>Marketing Manager</p><p>Example Company</p><p>Phone: (555) 555-5555</p></div>`,
+    category: "gmail",
+    createdAt: new Date().toISOString(),
+    updatedAt: new Date().toISOString(),
+  }
+];
 
 interface TemplateModalProps {
   isOpen: boolean;
   onClose: () => void;
   onSelect: (template: Template) => void;
-  currentHtml?: string;
+  currentHtml: string;
 }
 
-// Default templates to pre-populate the library
-const defaultTemplates: Template[] = [
-  {
-    id: 'default-email-1',
-    name: 'Simple Newsletter',
-    html: `<!DOCTYPE html><html><head><meta charset="UTF-8"><title>Simple Newsletter</title></head><body><div style="max-width: 600px; margin: 0 auto; font-family: Arial, sans-serif;"><div style="background-color: #f5f5f5; padding: 20px; text-align: center;"><h1>Newsletter Title</h1></div><div style="padding: 20px;"><p>Hello,</p><p>This is a simple newsletter template you can customize.</p></div></div></body></html>`,
-    category: 'email',
-    createdAt: new Date().toISOString(),
-    updatedAt: new Date().toISOString(),
-    isDefault: true
-  },
-  {
-    id: 'default-print-1',
-    name: 'Business Letter',
-    html: `<!DOCTYPE html><html><head><meta charset="UTF-8"><title>Business Letter</title></head><body style="font-family: 'Times New Roman', serif; margin: 1in;"><div style="text-align: right;"><p>Your Name<br>Your Address<br>City, State ZIP</p><p>Date: ${new Date().toLocaleDateString()}</p></div><div style="margin-top: 1in;"><p>Recipient Name<br>Recipient Address<br>City, State ZIP</p><p>Dear Recipient,</p><div style="margin: 1em 0;"><p>This is a formal business letter template you can customize for your needs.</p></div><p>Sincerely,</p><p>Your Name</p></div></body></html>`,
-    category: 'print',
-    createdAt: new Date().toISOString(),
-    updatedAt: new Date().toISOString(),
-    isDefault: true
-  },
-  {
-    id: 'default-gmail-1',
-    name: 'Professional Signature',
-    html: `<div style="font-family: Arial, sans-serif; font-size: 12px; color: #333333; border-top: 1px solid #dddddd; padding-top: 10px; margin-top: 10px;"><p style="margin: 0;"><strong>Your Name</strong><br>Your Title | Your Company<br>Email: your.email@example.com<br>Phone: (123) 456-7890</p></div>`,
-    category: 'gmail',
-    createdAt: new Date().toISOString(),
-    updatedAt: new Date().toISOString(),
-    isDefault: true
-  }
-];
-
 export const TemplateModal = ({ isOpen, onClose, onSelect, currentHtml }: TemplateModalProps) => {
-  const [templates, setTemplates] = useLocalStorage<Template[]>('email-templates', defaultTemplates);
-  const [searchQuery, setSearchQuery] = useState('');
+  const [storedTemplates, setStoredTemplates] = useLocalStorage<Template[]>('email-templates', []);
+  const [templates, setTemplates] = useState<Template[]>([]);
+  const [searchTerm, setSearchTerm] = useState('');
+  const [activeTab, setActiveTab] = useState('all');
+  const [isCreatingTemplate, setIsCreatingTemplate] = useState(false);
+  const [newTemplateName, setNewTemplateName] = useState('');
+  const [newTemplateCategory, setNewTemplateCategory] = useState('email');
   const [editingTemplate, setEditingTemplate] = useState<Template | null>(null);
-  const [templateName, setTemplateName] = useState('');
-  const [templateCategory, setTemplateCategory] = useState<string>('email');
-  const [isCreatingNew, setIsCreatingNew] = useState(false);
 
-  // Reset state when modal opens
+  // Initialize with default templates if none exist
   useEffect(() => {
-    if (isOpen) {
-      setSearchQuery('');
-      setEditingTemplate(null);
-      setTemplateName('');
-      setIsCreatingNew(false);
-      setTemplateCategory('email');
+    if (storedTemplates.length === 0) {
+      setStoredTemplates([...defaultTemplates]);
     }
-  }, [isOpen]);
+  }, [storedTemplates.length, setStoredTemplates]);
 
-  const filteredTemplates = templates.filter(template => 
-    template.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
-    template.category.toLowerCase().includes(searchQuery.toLowerCase())
-  );
-
-  const handleSelectTemplate = (template: Template) => {
-    onSelect(template);
-    onClose();
-  };
-
-  const handleDeleteTemplate = (templateId: string, e: React.MouseEvent) => {
-    e.stopPropagation();
+  // Update templates when stored templates change or search term changes
+  useEffect(() => {
+    let filteredTemplates = [...storedTemplates];
     
-    // Prevent deletion of default templates
-    const template = templates.find(t => t.id === templateId);
-    if (template?.isDefault) {
-      toast.error('Default templates cannot be deleted');
-      return;
+    // Filter by search term
+    if (searchTerm) {
+      filteredTemplates = filteredTemplates.filter(template => 
+        template.name.toLowerCase().includes(searchTerm.toLowerCase())
+      );
     }
     
-    const updatedTemplates = templates.filter(t => t.id !== templateId);
-    setTemplates(updatedTemplates);
-    toast.success('Template deleted');
-  };
-
-  const handleEditClick = (template: Template, e: React.MouseEvent) => {
-    e.stopPropagation();
-    setEditingTemplate(template);
-    setTemplateName(template.name);
-    setTemplateCategory(template.category);
-  };
-
-  const handleDuplicateTemplate = (template: Template, e: React.MouseEvent) => {
-    e.stopPropagation();
-    
-    const newTemplate: Template = {
-      ...template,
-      id: `${template.id}-copy-${Date.now()}`,
-      name: `${template.name} (Copy)`,
-      createdAt: new Date().toISOString(),
-      updatedAt: new Date().toISOString(),
-      isDefault: false
-    };
-    
-    setTemplates([...templates, newTemplate]);
-    toast.success('Template duplicated');
-  };
-
-  const saveTemplateEdit = () => {
-    if (!editingTemplate) return;
-    
-    if (!templateName.trim()) {
-      toast.error('Template name cannot be empty');
-      return;
+    // Filter by category tab
+    if (activeTab !== 'all') {
+      filteredTemplates = filteredTemplates.filter(template => 
+        template.category === activeTab
+      );
     }
     
-    const updatedTemplates = templates.map(t => 
-      t.id === editingTemplate.id 
-        ? { ...t, name: templateName, category: templateCategory, updatedAt: new Date().toISOString() } 
-        : t
-    );
-    
-    setTemplates(updatedTemplates);
-    setEditingTemplate(null);
-    setTemplateName('');
-    toast.success('Template updated');
-  };
+    setTemplates(filteredTemplates);
+  }, [storedTemplates, searchTerm, activeTab]);
 
-  const createNewTemplate = () => {
-    if (!templateName.trim()) {
+  const handleCreateTemplate = () => {
+    if (!newTemplateName.trim()) {
       toast.error('Please enter a template name');
       return;
     }
+
+    const newTemplate: Template = {
+      id: editingTemplate ? editingTemplate.id : Date.now().toString(),
+      name: newTemplateName,
+      html: editingTemplate ? editingTemplate.html : currentHtml,
+      category: newTemplateCategory,
+      createdAt: editingTemplate ? editingTemplate.createdAt : new Date().toISOString(),
+      updatedAt: new Date().toISOString(),
+    };
+
+    if (editingTemplate) {
+      // Update existing template
+      const updatedTemplates = storedTemplates.map(template => 
+        template.id === editingTemplate.id ? newTemplate : template
+      );
+      setStoredTemplates(updatedTemplates);
+      toast.success('Template updated successfully');
+    } else {
+      // Create new template
+      setStoredTemplates([...storedTemplates, newTemplate]);
+      toast.success('Template saved successfully');
+    }
+
+    // Reset the form
+    setNewTemplateName('');
+    setNewTemplateCategory('email');
+    setIsCreatingTemplate(false);
+    setEditingTemplate(null);
+  };
+
+  const handleDeleteTemplate = (template: Template, event: React.MouseEvent) => {
+    event.stopPropagation();
     
-    if (!currentHtml) {
-      toast.error('No content to save');
+    // Prevent deletion of default templates
+    if (template.id.startsWith('default-')) {
+      toast.error('Cannot delete default templates');
       return;
     }
+
+    const updatedTemplates = storedTemplates.filter(t => t.id !== template.id);
+    setStoredTemplates(updatedTemplates);
+    toast.success('Template deleted successfully');
+  };
+
+  const handleEditTemplate = (template: Template, event: React.MouseEvent) => {
+    event.stopPropagation();
+    setEditingTemplate(template);
+    setNewTemplateName(template.name);
+    setNewTemplateCategory(template.category);
+    setIsCreatingTemplate(true);
+  };
+
+  const handleDuplicateTemplate = (template: Template, event: React.MouseEvent) => {
+    event.stopPropagation();
     
-    const newTemplate: Template = {
-      id: `template-${Date.now()}`,
-      name: templateName,
-      html: currentHtml,
-      category: templateCategory,
+    const duplicatedTemplate: Template = {
+      ...template,
+      id: Date.now().toString(),
+      name: `${template.name} (Copy)`,
       createdAt: new Date().toISOString(),
-      updatedAt: new Date().toISOString()
+      updatedAt: new Date().toISOString(),
     };
     
-    setTemplates([...templates, newTemplate]);
-    setIsCreatingNew(false);
-    setTemplateName('');
-    toast.success('Template saved');
-  };
-
-  const cancelEdit = () => {
-    setEditingTemplate(null);
-    setTemplateName('');
-  };
-
-  const cancelCreate = () => {
-    setIsCreatingNew(false);
-    setTemplateName('');
+    setStoredTemplates([...storedTemplates, duplicatedTemplate]);
+    toast.success('Template duplicated successfully');
   };
 
   return (
     <Dialog open={isOpen} onOpenChange={(open) => !open && onClose()}>
-      <DialogContent className="sm:max-w-[500px] animate-fade-in">
-        <DialogHeader>
-          <DialogTitle className="text-xl">Email Templates</DialogTitle>
-        </DialogHeader>
-        
-        <div className="space-y-4 py-2">
-          <div className="flex items-center gap-4">
-            <Input
-              placeholder="Search templates..."
-              value={searchQuery}
-              onChange={(e) => setSearchQuery(e.target.value)}
-              className="transition-all-fast"
-            />
-            <Button 
-              variant="outline" 
-              size="sm"
-              onClick={() => setIsCreatingNew(true)}
-            >
-              <Plus className="h-4 w-4 mr-2" />
-              Save current
-            </Button>
-          </div>
-          
-          {isCreatingNew && (
-            <Card className="p-3">
-              <CardContent className="p-0 py-3">
-                <div className="space-y-3">
-                  <div>
-                    <Label htmlFor="new-template-name">Template Name</Label>
+      <DialogContent className="sm:max-w-[900px] h-[80vh] max-h-[700px] animate-fade-in">
+        {isCreatingTemplate ? (
+          <>
+            <DialogHeader>
+              <DialogTitle>{editingTemplate ? 'Edit Template' : 'Create New Template'}</DialogTitle>
+            </DialogHeader>
+            <div className="grid gap-4 py-4">
+              <div className="grid gap-2">
+                <Label htmlFor="template-name">Template Name</Label>
+                <Input
+                  id="template-name"
+                  value={newTemplateName}
+                  onChange={(e) => setNewTemplateName(e.target.value)}
+                  placeholder="Enter a name for your template"
+                  className="col-span-3"
+                  autoFocus
+                />
+              </div>
+              <div className="grid gap-2">
+                <Label htmlFor="template-category">Category</Label>
+                <Select value={newTemplateCategory} onValueChange={setNewTemplateCategory}>
+                  <SelectTrigger id="template-category">
+                    <SelectValue placeholder="Select a category" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="email">Email</SelectItem>
+                    <SelectItem value="print">Print Document</SelectItem>
+                    <SelectItem value="gmail">Gmail Signature</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+            </div>
+            <DialogFooter>
+              <Button variant="outline" onClick={() => {
+                setIsCreatingTemplate(false);
+                setEditingTemplate(null);
+                setNewTemplateName('');
+              }}>
+                Cancel
+              </Button>
+              <Button onClick={handleCreateTemplate}>
+                {editingTemplate ? 'Update Template' : 'Save Template'}
+              </Button>
+            </DialogFooter>
+          </>
+        ) : (
+          <>
+            <DialogHeader>
+              <DialogTitle className="text-xl flex justify-between items-center">
+                <span>Your Templates</span>
+                <div className="flex items-center space-x-2">
+                  <div className="relative">
+                    <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-muted-foreground" />
                     <Input
-                      id="new-template-name"
-                      value={templateName}
-                      onChange={(e) => setTemplateName(e.target.value)}
-                      placeholder="Enter template name"
-                      autoFocus
+                      type="search"
+                      placeholder="Search templates..."
+                      className="pl-8 w-[200px]"
+                      value={searchTerm}
+                      onChange={(e) => setSearchTerm(e.target.value)}
                     />
                   </div>
-                  <div>
-                    <Label htmlFor="new-template-category">Category</Label>
-                    <Select
-                      value={templateCategory}
-                      onValueChange={setTemplateCategory}
-                    >
-                      <SelectTrigger id="new-template-category">
-                        <SelectValue placeholder="Select category" />
-                      </SelectTrigger>
-                      <SelectContent>
-                        <SelectItem value="email">Email</SelectItem>
-                        <SelectItem value="print">Print</SelectItem>
-                        <SelectItem value="gmail">Gmail Signature</SelectItem>
-                      </SelectContent>
-                    </Select>
-                  </div>
-                </div>
-              </CardContent>
-              <CardFooter className="flex justify-end space-x-2 p-3 pt-0">
-                <Button 
-                  variant="outline" 
-                  size="sm"
-                  onClick={cancelCreate}
-                >
-                  Cancel
-                </Button>
-                <Button 
-                  size="sm"
-                  onClick={createNewTemplate}
-                >
-                  Save Template
-                </Button>
-              </CardFooter>
-            </Card>
-          )}
-          
-          <ScrollArea className="h-[300px] rounded-md border p-2">
-            {filteredTemplates.length === 0 ? (
-              <div className="flex flex-col items-center justify-center h-full text-muted-foreground p-4">
-                <p>No templates found</p>
-                <Button variant="link" className="mt-2" onClick={() => setIsCreatingNew(true)}>
-                  <Plus className="h-4 w-4 mr-2" />
-                  Create a new template
-                </Button>
-              </div>
-            ) : (
-              <div className="space-y-2">
-                {filteredTemplates.map((template) => (
-                  <Card 
-                    key={template.id}
-                    className={`cursor-pointer hover:bg-muted/50 transition-all-fast ${
-                      editingTemplate?.id === template.id ? 'ring-1 ring-primary' : ''
-                    } ${template.isDefault ? 'border-primary/20' : ''}`}
-                    onClick={() => handleSelectTemplate(template)}
+                  <Button 
+                    variant="default" 
+                    size="sm" 
+                    onClick={() => setIsCreatingTemplate(true)}
                   >
-                    <CardContent className="p-3">
-                      {editingTemplate?.id === template.id ? (
-                        <div className="flex flex-col space-y-2">
-                          <div>
-                            <Label htmlFor="template-name">Template Name</Label>
-                            <Input
-                              id="template-name"
-                              value={templateName}
-                              onChange={(e) => setTemplateName(e.target.value)}
-                              onClick={(e) => e.stopPropagation()}
-                              autoFocus
-                            />
+                    <Plus className="h-4 w-4 mr-1" />
+                    New Template
+                  </Button>
+                </div>
+              </DialogTitle>
+            </DialogHeader>
+            
+            <Tabs defaultValue="all" value={activeTab} onValueChange={setActiveTab} className="w-full">
+              <TabsList className="grid w-full grid-cols-4">
+                <TabsTrigger value="all">All Templates</TabsTrigger>
+                <TabsTrigger value="email">Email</TabsTrigger>
+                <TabsTrigger value="print">Print</TabsTrigger>
+                <TabsTrigger value="gmail">Gmail Signature</TabsTrigger>
+              </TabsList>
+              
+              <ScrollArea className="h-[500px] mt-4">
+                {templates.length === 0 ? (
+                  <div className="flex flex-col items-center justify-center h-64 text-center p-4">
+                    <p className="text-muted-foreground mb-4">No templates found.</p>
+                    <Button 
+                      variant="outline" 
+                      onClick={() => setIsCreatingTemplate(true)}
+                    >
+                      <Plus className="h-4 w-4 mr-2" />
+                      Create your first template
+                    </Button>
+                  </div>
+                ) : (
+                  <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 p-2">
+                    {templates.map((template) => (
+                      <Card 
+                        key={template.id}
+                        className={`cursor-pointer overflow-hidden transition-all duration-200 hover:shadow-md ${
+                          template.id.startsWith('default-') ? 'border-blue-200' : ''
+                        }`}
+                        onClick={() => onSelect(template)}
+                      >
+                        <div className="relative p-4 border-b bg-muted/50">
+                          <div className="h-24 overflow-hidden text-xs opacity-70">
+                            {template.html.substring(0, 200)}...
                           </div>
-                          <div>
-                            <Label htmlFor="template-category">Category</Label>
-                            <Select
-                              value={templateCategory}
-                              onValueChange={setTemplateCategory}
-                              onOpenChange={(e) => e && e.stopPropagation()}
-                            >
-                              <SelectTrigger 
-                                id="template-category"
-                                onClick={(e) => e.stopPropagation()}
-                              >
-                                <SelectValue placeholder="Select category" />
-                              </SelectTrigger>
-                              <SelectContent>
-                                <SelectItem value="email">Email</SelectItem>
-                                <SelectItem value="print">Print</SelectItem>
-                                <SelectItem value="gmail">Gmail Signature</SelectItem>
-                              </SelectContent>
-                            </Select>
-                          </div>
+                          {template.id.startsWith('default-') && (
+                            <div className="absolute top-2 right-2 bg-blue-100 text-blue-800 text-xs px-2 py-1 rounded">
+                              Default
+                            </div>
+                          )}
                         </div>
-                      ) : (
-                        <div className="flex justify-between items-center">
+                        <CardContent className="p-3 flex justify-between items-center">
                           <div>
-                            <div className="flex items-center gap-2">
-                              <FileIcon className="h-4 w-4 text-muted-foreground" />
-                              <h3 className="font-medium">
-                                {template.name}
-                                {template.isDefault && (
-                                  <span className="ml-2 text-xs text-primary">(Default)</span>
-                                )}
-                              </h3>
-                            </div>
-                            <div className="flex items-center gap-2 mt-1">
-                              <span className="text-xs capitalize px-2 py-0.5 bg-muted rounded-full">
-                                {template.category}
-                              </span>
-                              <p className="text-xs text-muted-foreground">
-                                Updated {new Date(template.updatedAt).toLocaleDateString()}
-                              </p>
-                            </div>
+                            <h3 className="font-medium">{template.name}</h3>
+                            <p className="text-xs text-muted-foreground">
+                              {new Date(template.updatedAt).toLocaleDateString()}
+                            </p>
                           </div>
                           <div className="flex space-x-1">
                             <Button 
                               variant="ghost" 
                               size="icon" 
-                              className="h-8 w-8"
                               onClick={(e) => handleDuplicateTemplate(template, e)}
-                              title="Duplicate"
+                              className="h-8 w-8"
                             >
                               <Copy className="h-4 w-4" />
                             </Button>
-                            <Button 
-                              variant="ghost" 
-                              size="icon" 
-                              className="h-8 w-8"
-                              onClick={(e) => handleEditClick(template, e)}
-                              title="Edit"
-                            >
-                              <Edit className="h-4 w-4" />
-                            </Button>
-                            <Button 
-                              variant="ghost" 
-                              size="icon" 
-                              className="h-8 w-8"
-                              onClick={(e) => handleDeleteTemplate(template.id, e)}
-                              disabled={template.isDefault}
-                              title={template.isDefault ? "Default templates cannot be deleted" : "Delete"}
-                            >
-                              <Trash className="h-4 w-4" />
-                            </Button>
+                            {!template.id.startsWith('default-') && (
+                              <>
+                                <Button 
+                                  variant="ghost" 
+                                  size="icon" 
+                                  onClick={(e) => handleEditTemplate(template, e)}
+                                  className="h-8 w-8"
+                                >
+                                  <Edit className="h-4 w-4" />
+                                </Button>
+                                <Button 
+                                  variant="ghost" 
+                                  size="icon" 
+                                  onClick={(e) => handleDeleteTemplate(template, e)}
+                                  className="h-8 w-8 text-destructive hover:text-destructive"
+                                >
+                                  <Trash2 className="h-4 w-4" />
+                                </Button>
+                              </>
+                            )}
                           </div>
-                        </div>
-                      )}
-                    </CardContent>
-                    
-                    {editingTemplate?.id === template.id && (
-                      <CardFooter className="flex justify-end space-x-2 p-3 pt-0">
-                        <Button 
-                          variant="outline" 
-                          size="sm"
-                          onClick={(e) => {
-                            e.stopPropagation();
-                            cancelEdit();
-                          }}
-                        >
-                          Cancel
-                        </Button>
-                        <Button 
-                          size="sm"
-                          onClick={(e) => {
-                            e.stopPropagation();
-                            saveTemplateEdit();
-                          }}
-                        >
-                          Save
-                        </Button>
-                      </CardFooter>
-                    )}
-                  </Card>
-                ))}
-              </div>
-            )}
-          </ScrollArea>
-        </div>
+                        </CardContent>
+                      </Card>
+                    ))}
+                  </div>
+                )}
+              </ScrollArea>
+            </Tabs>
+          </>
+        )}
       </DialogContent>
     </Dialog>
   );
