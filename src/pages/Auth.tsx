@@ -1,7 +1,6 @@
-
 import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { supabase } from '@/integrations/supabase/client';
+import { supabase, SITE_URL } from '@/integrations/supabase/client';
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -9,9 +8,6 @@ import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle }
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { toast } from "sonner";
 import { Loader2 } from "lucide-react";
-
-// Define the site URL for redirects - should match the one in the client
-const SITE_URL = "https://email-template-visionary.lovable.app";
 
 const Auth = () => {
   const [email, setEmail] = useState('');
@@ -22,7 +18,6 @@ const Auth = () => {
   const navigate = useNavigate();
 
   useEffect(() => {
-    // Check if user is already logged in
     const checkSession = async () => {
       const { data } = await supabase.auth.getSession();
       if (data.session) {
@@ -32,7 +27,6 @@ const Auth = () => {
 
     checkSession();
 
-    // Listen for auth changes
     const { data: { subscription } } = supabase.auth.onAuthStateChange(
       (event, session) => {
         if (session) {
@@ -54,14 +48,12 @@ const Auth = () => {
 
     setLoading(true);
     try {
-      // Use the explicit site URL for redirect
-      const redirectTo = SITE_URL;
-      console.log("Redirect URL:", redirectTo);
+      console.log("Redirect URL:", SITE_URL);
       
       const { error } = await supabase.auth.signInWithOtp({
         email,
         options: {
-          emailRedirectTo: redirectTo,
+          emailRedirectTo: SITE_URL,
         },
       });
 
