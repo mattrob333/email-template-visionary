@@ -7,15 +7,18 @@ import { toast } from 'sonner';
 import { ChatMessage, getChatCompletion, hasOpenAIKey } from '../services/openai';
 import OpenAIKeyDialog from './OpenAIKeyDialog';
 import ImageManager from './ImageManager';
+
 interface AIChatProps {
   htmlContent: string;
   onUpdateHtml: (newHtml: string) => void;
 }
+
 type Message = {
   role: 'user' | 'assistant' | 'system';
   content: string;
   timestamp: Date;
 };
+
 const AIChat = ({
   htmlContent,
   onUpdateHtml
@@ -31,46 +34,70 @@ const AIChat = ({
   const [showVariables, setShowVariables] = useState(false);
   const [chatHeight, setChatHeight] = useState(250);
   const [isImageManagerOpen, setIsImageManagerOpen] = useState(false);
+  
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLInputElement>(null);
   const resizerRef = useRef<HTMLDivElement>(null);
+  const chatContainerRef = useRef<HTMLDivElement>(null);
   const isResizingRef = useRef(false);
+  const startYRef = useRef(0);
+  const startHeightRef = useRef(0);
+
   useEffect(() => {
     messagesEndRef.current?.scrollIntoView({
       behavior: 'smooth'
     });
   }, [messages]);
+
   useEffect(() => {
     const resizer = resizerRef.current;
     if (!resizer) return;
+
     const onMouseDown = (e: MouseEvent) => {
       e.preventDefault();
       isResizingRef.current = true;
+      startYRef.current = e.clientY;
+      startHeightRef.current = chatHeight;
+      
       document.addEventListener('mousemove', onMouseMove);
       document.addEventListener('mouseup', onMouseUp);
       document.body.style.cursor = 'row-resize';
+      document.body.style.userSelect = 'none';
     };
+
     const onMouseMove = (e: MouseEvent) => {
       if (!isResizingRef.current) return;
-      const containerRect = resizer.parentElement?.getBoundingClientRect();
-      if (containerRect) {
-        const newHeight = Math.max(150, Math.min(500, containerRect.bottom - e.clientY));
-        setChatHeight(newHeight);
+      
+      // Calculate how far the mouse has moved
+      const deltaY = startYRef.current - e.clientY;
+      
+      // Calculate new height
+      const newHeight = Math.max(150, Math.min(500, startHeightRef.current + deltaY));
+      
+      setChatHeight(newHeight);
+      
+      if (chatContainerRef.current) {
+        chatContainerRef.current.style.height = `${newHeight}px`;
       }
     };
+
     const onMouseUp = () => {
       isResizingRef.current = false;
       document.removeEventListener('mousemove', onMouseMove);
       document.removeEventListener('mouseup', onMouseUp);
       document.body.style.cursor = '';
+      document.body.style.userSelect = '';
     };
+
     resizer.addEventListener('mousedown', onMouseDown);
+    
     return () => {
       resizer.removeEventListener('mousedown', onMouseDown);
       document.removeEventListener('mousemove', onMouseMove);
       document.removeEventListener('mouseup', onMouseUp);
     };
-  }, []);
+  }, [chatHeight]);
+
   const handleSendMessage = async () => {
     if (!inputValue.trim()) return;
     if (!hasOpenAIKey()) {
@@ -111,12 +138,14 @@ const AIChat = ({
       setLoading(false);
     }
   };
+
   const handleKeyDown = (e: React.KeyboardEvent) => {
     if (e.key === 'Enter' && !e.shiftKey) {
       e.preventDefault();
       handleSendMessage();
     }
   };
+
   const clearConversation = () => {
     setMessages([{
       role: 'assistant',
@@ -124,6 +153,7 @@ const AIChat = ({
       timestamp: new Date()
     }]);
   };
+
   const handleInsertImage = (imageHtml: string) => {
     onUpdateHtml(htmlContent + "\n" + imageHtml);
     const imageInsertedMessage: Message = {
@@ -133,8 +163,13 @@ const AIChat = ({
     };
     setMessages(prev => [...prev, imageInsertedMessage]);
   };
+
   return <div className="flex flex-col h-full">
-      <div ref={resizerRef} className="w-full h-1 bg-border/30 cursor-row-resize hover:bg-primary/50 hover:h-1.5 -mt-1 transition-all" title="Drag to resize">
+      <div 
+        ref={resizerRef} 
+        className="w-full h-1 bg-border/30 cursor-row-resize hover:bg-primary/50 hover:h-1.5 -mt-1 transition-all" 
+        title="Drag to resize"
+      >
         <div className="flex justify-center items-center h-full">
           <GripVertical className="h-3 w-3 text-muted-foreground/60" />
         </div>
@@ -156,9 +191,12 @@ const AIChat = ({
         </div>
       </div>
       
-      {showVariables ? <VariableManager htmlContent={htmlContent} onUpdateHtml={onUpdateHtml} /> : <div className="flex-1 flex flex-col p-0" style={{
-      height: `${chatHeight}px`
-    }}>
+      {showVariables ? <VariableManager htmlContent={htmlContent} onUpdateHtml={onUpdateHtml} /> : 
+        <div 
+          ref={chatContainerRef}
+          className="flex-1 flex flex-col p-0" 
+          style={{ height: `${chatHeight}px` }}
+        >
           <ScrollArea className="flex-1 p-2">
             <div className="space-y-2">
               {messages.map((message, index) => <div key={index} className={`flex ${message.role === 'user' ? 'justify-end' : 'justify-start'}`}>
@@ -200,12 +238,14 @@ const AIChat = ({
       <ImageManager isOpen={isImageManagerOpen} onClose={() => setIsImageManagerOpen(false)} onInsert={handleInsertImage} />
     </div>;
 };
+
 const VariableManager = ({
   htmlContent,
   onUpdateHtml
 }: AIChatProps) => {
   const [variables, setVariables] = useState<Record<string, string>>({});
   const [previewHtml, setPreviewHtml] = useState(htmlContent);
+
   useEffect(() => {
     const extractedVars: Record<string, string> = {};
     const regex = /\{\{([^}]+)\}\}/g;
@@ -219,12 +259,14 @@ const VariableManager = ({
     setVariables(extractedVars);
     setPreviewHtml(htmlContent);
   }, [htmlContent]);
+
   const handleVariableChange = (name: string, value: string) => {
     setVariables(prev => ({
       ...prev,
       [name]: value
     }));
   };
+
   const applyVariables = () => {
     let updatedHtml = htmlContent;
     Object.entries(variables).forEach(([name, value]) => {
@@ -233,6 +275,7 @@ const VariableManager = ({
     });
     setPreviewHtml(updatedHtml);
   };
+
   const saveWithVariables = () => {
     let updatedHtml = htmlContent;
     Object.entries(variables).forEach(([name, value]) => {
@@ -242,11 +285,13 @@ const VariableManager = ({
     onUpdateHtml(updatedHtml);
     toast.success('Template updated with your variables');
   };
+
   const insertVariableIntoTemplate = (name: string) => {
     const updatedHtml = htmlContent + `\n<!-- Example usage: -->\n<p>{{${name}}}</p>`;
     onUpdateHtml(updatedHtml);
     toast.success(`Variable {{${name}}} added to template`);
   };
+
   const addNewVariable = () => {
     const newVarName = `variable${Object.keys(variables).length + 1}`;
     setVariables(prev => ({
@@ -254,6 +299,7 @@ const VariableManager = ({
       [newVarName]: ''
     }));
   };
+
   return <div className="flex flex-col h-full">
       <ScrollArea className="flex-1 p-4">
         {Object.keys(variables).length > 0 ? <div className="space-y-4">
@@ -291,4 +337,5 @@ const VariableManager = ({
         </div>}
     </div>;
 };
+
 export default AIChat;

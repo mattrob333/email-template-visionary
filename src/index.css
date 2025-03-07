@@ -1,3 +1,4 @@
+
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
@@ -141,6 +142,19 @@
   min-height: 150px;
   max-height: 500px;
   transition: height 0.2s ease;
+}
+
+/* Chat resizer styles */
+[data-resizer] {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background-color: rgba(0, 0, 0, 0.1);
+  transition: all 0.2s ease;
+}
+
+[data-resizer]:hover {
+  background-color: rgba(var(--primary), 0.5);
 }
 
 /* Screen size utilities */
