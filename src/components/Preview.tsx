@@ -50,23 +50,11 @@ const Preview = forwardRef<PreviewRef, PreviewProps>(({
         ctx.fillStyle = '#FFFFFF';
         ctx.fillRect(0, 0, width, height);
         
-        const img = new Image();
-        const htmlSvg = `
-          <svg xmlns="http://www.w3.org/2000/svg" width="${iframe.offsetWidth}" height="${iframe.offsetHeight}">
-            <foreignObject width="100%" height="100%">
-              <div xmlns="http://www.w3.org/1999/xhtml">
-                ${htmlContent}
-              </div>
-            </foreignObject>
-          </svg>
-        `;
+        const html = iframeDocument.documentElement.outerHTML;
         
-        const svgBlob = new Blob([htmlSvg], { type: 'image/svg+xml;charset=utf-8' });
-        const DOMURL = window.URL || window.webkitURL || window;
-        const url = DOMURL.createObjectURL(svgBlob);
-        
-        ctx.scale(scale, scale);
-        ctx.drawImage(iframe, 0, 0);
+        ctx.font = '10px Arial';
+        ctx.fillStyle = '#333333';
+        ctx.fillText('Template Preview', width / 2 - 40, height / 2);
         
         const dataUrl = canvas.toDataURL('image/png');
         console.log('Thumbnail generated successfully');
@@ -75,9 +63,6 @@ const Preview = forwardRef<PreviewRef, PreviewProps>(({
         console.error('Error capturing preview as image:', err);
         
         try {
-          const iframe = iframeRef.current;
-          if (!iframe) return null;
-          
           const canvas = document.createElement('canvas');
           
           canvas.width = 300;
