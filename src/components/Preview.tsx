@@ -1,6 +1,7 @@
 
 import { useRef, useEffect, forwardRef, useImperativeHandle } from 'react';
 import { sanitizeHtml } from '../utils/exportUtils';
+import { ScrollArea } from '@/components/ui/scroll-area';
 
 interface PreviewProps {
   htmlContent: string;
@@ -118,18 +119,9 @@ const Preview = forwardRef<PreviewRef, PreviewProps>(({
   };
 
   // Apply container style based on preview mode
-  const containerStyle = previewMode === 'print' 
-    ? {
-        overflow: 'auto',
-        backgroundColor: '#f0f0f0',
-        padding: '2rem',
-        width: '100%',
-        height: '100%',
-        display: 'flex',
-        justifyContent: 'center',
-        alignItems: 'flex-start'
-      }
-    : {};
+  const previewContainerClass = previewMode === 'print' 
+    ? 'w-full h-full bg-gray-100 p-6 flex justify-center'
+    : 'w-full h-full';
 
   // Apply iframe style based on preview mode
   const iframeStyle = previewMode === 'print' 
@@ -141,17 +133,14 @@ const Preview = forwardRef<PreviewRef, PreviewProps>(({
         width: getPaperDimensions(paperSize, orientation).width + 'px',
         height: getPaperDimensions(paperSize, orientation).height + 'px'
       }
-    : {};
+    : { width: '100%', height: '100%' };
 
   return (
-    <div 
-      className={`w-full h-full overflow-hidden rounded-md border border-border/50 email-preview bg-white`}
-      style={containerStyle}
-    >
+    <div className={`w-full h-full overflow-hidden rounded-md border border-border/50 bg-white ${previewContainerClass}`}>
       <iframe 
         ref={iframeRef} 
         title="Content Preview" 
-        className="w-full h-full animate-fade-in"
+        className="border-0 animate-fade-in"
         sandbox="allow-same-origin"
         style={iframeStyle}
       />

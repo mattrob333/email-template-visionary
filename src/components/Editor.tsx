@@ -46,18 +46,16 @@ export const Editor = ({ value, onChange, isDarkMode }: EditorProps) => {
   };
 
   return (
-    <div className="flex flex-col h-full">
-      <div className="flex-1 min-h-0 overflow-auto">
-        <textarea
-          ref={textareaRef}
-          value={value}
-          onChange={(e) => onChange(e.target.value)}
-          className={`w-full h-full p-4 font-mono text-sm resize-none focus:outline-none focus:ring-1 focus:ring-primary/30 ${
-            isDarkMode ? 'bg-card text-foreground' : 'bg-white text-black'
-          }`}
-          spellCheck="false"
-        />
-      </div>
+    <div className="h-full">
+      <textarea
+        ref={textareaRef}
+        value={value}
+        onChange={(e) => onChange(e.target.value)}
+        className={`w-full h-full p-4 font-mono text-sm resize-none focus:outline-none focus:ring-1 focus:ring-primary/30 ${
+          isDarkMode ? 'bg-card text-foreground' : 'bg-white text-black'
+        }`}
+        spellCheck="false"
+      />
     </div>
   );
 };
