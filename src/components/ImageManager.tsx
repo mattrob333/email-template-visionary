@@ -10,7 +10,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { Slider } from "@/components/ui/slider";
-import { getImages, saveImage, EmailImage, processImageFile } from '../services/imageService';
+import { getImages, saveImage, EmailImage, processImageFile, generateImageReference } from '../services/imageService';
 
 export interface ImageManagerProps {
   isOpen: boolean;
