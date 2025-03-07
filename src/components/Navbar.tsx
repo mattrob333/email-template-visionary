@@ -1,5 +1,6 @@
+
 import { useState } from 'react';
-import { Moon, Sun, Save, FileCode, Image, FileText, Menu, Copy, MessageSquare } from 'lucide-react';
+import { Moon, Sun, Save, FileCode, Image, Menu, Copy, MessageSquare } from 'lucide-react';
 import { Button } from "@/components/ui/button";
 import { TemplateModal } from './TemplateModal';
 import TemplateSelector from './TemplateSelector';
@@ -136,16 +137,6 @@ const Navbar = ({
               {isExporting ? 'Exporting...' : 'Export PDF'}
             </Button>
             
-            <Button
-              variant={showAIChat ? "default" : "outline"}
-              size="sm"
-              className="hidden md:flex"
-              onClick={toggleAIChat}
-            >
-              <MessageSquare className="h-4 w-4 mr-1" />
-              AI Assistant
-            </Button>
-            
             <Button 
               size="icon" 
               variant="ghost" 
@@ -177,10 +168,6 @@ const Navbar = ({
                 <DropdownMenuItem onClick={onExportPdf} disabled={isExporting}>
                   <FileText className="h-4 w-4 mr-2" />
                   {isExporting ? 'Exporting...' : 'Export PDF'}
-                </DropdownMenuItem>
-                <DropdownMenuItem onClick={toggleAIChat}>
-                  <MessageSquare className="h-4 w-4 mr-2" />
-                  {showAIChat ? 'Edit Code' : 'AI Assistant'}
                 </DropdownMenuItem>
                 <DropdownMenuSeparator />
                 <DropdownMenuItem onClick={toggleDarkMode}>

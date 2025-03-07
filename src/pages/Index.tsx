@@ -11,7 +11,6 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { exportAsPdf } from '../utils/exportUtils';
-import { MessageSquare, Code } from 'lucide-react';
 
 const initialTemplate = `<!DOCTYPE html>
 <html>
@@ -111,7 +110,7 @@ const Index = () => {
   const [orientation, setOrientation] = useState<'portrait' | 'landscape'>('portrait');
   const [showGuides, setShowGuides] = useState(false);
   const [isExporting, setIsExporting] = useState(false);
-  const [showAIChat, setShowAIChat] = useState(true); // Set to true by default
+  const [showAIChat, setShowAIChat] = useState(true); // Always show AI chat now
 
   const containerRef = useRef<HTMLDivElement>(null);
   const resizeHandleRef = useRef<HTMLDivElement>(null);
@@ -206,10 +205,6 @@ const Index = () => {
     });
   };
 
-  const toggleAIChat = () => {
-    setShowAIChat(prev => !prev);
-  };
-
   useEffect(() => {
     const resizeHandle = resizeHandleRef.current;
     const container = containerRef.current;
@@ -266,8 +261,6 @@ const Index = () => {
         previewMode={previewMode}
         onExportPdf={handleExportPdf}
         isExporting={isExporting}
-        showAIChat={showAIChat}
-        toggleAIChat={toggleAIChat}
       />
       
       <main className="flex-1 container mx-auto p-4 xl:max-w-[1600px] 2xl:max-w-[1800px] overflow-hidden">
