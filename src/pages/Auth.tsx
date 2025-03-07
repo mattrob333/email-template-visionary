@@ -10,6 +10,9 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { toast } from "sonner";
 import { Loader2 } from "lucide-react";
 
+// Define the site URL for redirects - should match the one in the client
+const SITE_URL = "https://email-template-visionary.lovable.app";
+
 const Auth = () => {
   const [email, setEmail] = useState('');
   const [loading, setLoading] = useState(false);
@@ -51,8 +54,8 @@ const Auth = () => {
 
     setLoading(true);
     try {
-      // Use the current origin for redirect
-      const redirectTo = `${window.location.origin}`;
+      // Use the explicit site URL for redirect
+      const redirectTo = SITE_URL;
       console.log("Redirect URL:", redirectTo);
       
       const { error } = await supabase.auth.signInWithOtp({
