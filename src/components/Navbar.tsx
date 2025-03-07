@@ -1,11 +1,14 @@
-import { useState } from 'react';
-import { Moon, Sun, Save, FileCode, Image, Menu, Copy, FileIcon } from 'lucide-react';
+
+import { useState, useEffect } from 'react';
+import { Moon, Sun, Save, FileCode, Image, Menu, Copy, FileIcon, LogOut, LogIn } from 'lucide-react';
 import { Button } from "@/components/ui/button";
 import { TemplateModal } from './TemplateModal';
 import TemplateSelector from './TemplateSelector';
 import ImageManager from './ImageManager';
 import { toast } from 'sonner';
 import { copyRenderedContent } from '../utils/exportUtils';
+import { useNavigate } from 'react-router-dom';
+import { supabase } from '@/integrations/supabase/client';
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -49,6 +52,29 @@ const Navbar = ({
   const [isSelectTemplateOpen, setIsSelectTemplateOpen] = useState(false);
   const [isImageManagerOpen, setIsImageManagerOpen] = useState(false);
   const [isCopying, setIsCopying] = useState(false);
+  const [user, setUser] = useState<any>(null);
+  const navigate = useNavigate();
+  
+  useEffect(() => {
+    // Check current session
+    const getSession = async () => {
+      const { data } = await supabase.auth.getSession();
+      setUser(data.session?.user || null);
+    };
+    
+    getSession();
+    
+    // Listen for auth changes
+    const { data: { subscription } } = supabase.auth.onAuthStateChange(
+      (event, session) => {
+        setUser(session?.user || null);
+      }
+    );
+    
+    return () => {
+      subscription.unsubscribe();
+    };
+  }, []);
   
   const handleInsertImageFromModal = (imageHtml: string) => {
     onInsertImage(imageHtml);
@@ -76,6 +102,20 @@ const Navbar = ({
     } finally {
       setIsCopying(false);
     }
+  };
+  
+  const handleSignOut = async () => {
+    try {
+      const { error } = await supabase.auth.signOut();
+      if (error) throw error;
+      toast.success("Successfully signed out");
+    } catch (error: any) {
+      toast.error(error.message || "Sign out failed");
+    }
+  };
+  
+  const handleSignIn = () => {
+    navigate('/auth');
   };
 
   return (
@@ -136,6 +176,28 @@ const Navbar = ({
               {isExporting ? 'Exporting...' : 'Export PDF'}
             </Button>
             
+            {user ? (
+              <Button 
+                variant="outline"
+                size="sm"
+                className="hidden md:flex"
+                onClick={handleSignOut}
+              >
+                <LogOut className="h-4 w-4 mr-1" />
+                Sign Out
+              </Button>
+            ) : (
+              <Button 
+                variant="outline"
+                size="sm"
+                className="hidden md:flex"
+                onClick={handleSignIn}
+              >
+                <LogIn className="h-4 w-4 mr-1" />
+                Sign In
+              </Button>
+            )}
+            
             <Button 
               size="icon" 
               variant="ghost" 
@@ -169,6 +231,15 @@ const Navbar = ({
                   {isExporting ? 'Exporting...' : 'Export PDF'}
                 </DropdownMenuItem>
                 <DropdownMenuSeparator />
+                {user ? (
+                  <DropdownMenuItem onClick={handleSignOut}>
+                    <LogOut className="h-4 w-4 mr-2" /> Sign Out
+                  </DropdownMenuItem>
+                ) : (
+                  <DropdownMenuItem onClick={handleSignIn}>
+                    <LogIn className="h-4 w-4 mr-2" /> Sign In
+                  </DropdownMenuItem>
+                )}
                 <DropdownMenuItem onClick={toggleDarkMode}>
                   {isDarkMode ? <Sun className="h-4 w-4 mr-2" /> : <Moon className="h-4 w-4 mr-2" />}
                   {isDarkMode ? 'Light Mode' : 'Dark Mode'}
