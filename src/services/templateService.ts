@@ -15,7 +15,8 @@ export interface SupabaseTemplate {
 
 export const saveTemplate = async (template: Omit<Template, 'id' | 'createdAt' | 'updatedAt'>): Promise<Template | null> => {
   try {
-    // Use type assertion to bypass TypeScript's strict type checking
+    console.log('Saving template to Supabase:', template);
+    
     const { data, error } = await supabase
       .from('templates')
       .insert({
@@ -27,7 +28,12 @@ export const saveTemplate = async (template: Omit<Template, 'id' | 'createdAt' |
       .select()
       .single();
 
-    if (error) throw error;
+    if (error) {
+      console.error('Supabase error when saving template:', error);
+      throw error;
+    }
+    
+    console.log('Template saved successfully:', data);
     
     return data ? {
       id: data.id,
@@ -46,13 +52,19 @@ export const saveTemplate = async (template: Omit<Template, 'id' | 'createdAt' |
 
 export const getTemplates = async (): Promise<Template[]> => {
   try {
-    // Use type assertion to bypass TypeScript's strict type checking
+    console.log('Fetching templates from Supabase');
+    
     const { data, error } = await supabase
       .from('templates')
       .select('*')
       .order('created_at', { ascending: false });
 
-    if (error) throw error;
+    if (error) {
+      console.error('Supabase error when fetching templates:', error);
+      throw error;
+    }
+
+    console.log('Templates fetched successfully:', data);
 
     return data ? data.map((item: any) => ({
       id: item.id,
@@ -71,7 +83,8 @@ export const getTemplates = async (): Promise<Template[]> => {
 
 export const updateTemplate = async (template: Template): Promise<Template | null> => {
   try {
-    // Use type assertion to bypass TypeScript's strict type checking
+    console.log('Updating template in Supabase:', template);
+    
     const { data, error } = await supabase
       .from('templates')
       .update({
@@ -85,7 +98,12 @@ export const updateTemplate = async (template: Template): Promise<Template | nul
       .select()
       .single();
 
-    if (error) throw error;
+    if (error) {
+      console.error('Supabase error when updating template:', error);
+      throw error;
+    }
+    
+    console.log('Template updated successfully:', data);
     
     return data ? {
       id: data.id,
@@ -104,13 +122,19 @@ export const updateTemplate = async (template: Template): Promise<Template | nul
 
 export const deleteTemplate = async (id: string): Promise<boolean> => {
   try {
-    // Use type assertion to bypass TypeScript's strict type checking
+    console.log('Deleting template from Supabase, id:', id);
+    
     const { error } = await supabase
       .from('templates')
       .delete()
       .eq('id', id);
 
-    if (error) throw error;
+    if (error) {
+      console.error('Supabase error when deleting template:', error);
+      throw error;
+    }
+    
+    console.log('Template deleted successfully');
     
     return true;
   } catch (error) {
