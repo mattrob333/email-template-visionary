@@ -1,5 +1,5 @@
 
-import { useEffect, useState } from 'react';
+import { useEffect, useState, useCallback } from 'react';
 import { sanitizeHtml } from '../../utils/exportUtils';
 import { expandImageReferences } from '../../services/imageService';
 import { applyStylesToHtml, getPaperDimensions, handleIframeError } from './PreviewUtils';
@@ -26,40 +26,41 @@ const PreviewCore = ({
   const [isProcessing, setIsProcessing] = useState(false);
   const [processingError, setProcessingError] = useState<Error | null>(null);
 
-  useEffect(() => {
-    const processHtml = async () => {
-      setIsProcessing(true);
-      setProcessingError(null);
-      
-      try {
-        console.log("[Preview] Starting image reference expansion");
-        
-        // Process the HTML content to expand image references
-        const expandedHtml = await expandImageReferences(htmlContent);
-        
-        // Sanitize and style the expanded HTML
-        const sanitizedHtml = sanitizeHtml(expandedHtml);
-        const styledHtml = applyStylesToHtml(sanitizedHtml, previewMode, paperSize, orientation, showGuides);
-        
-        setProcessedHtml(styledHtml);
-      } catch (error) {
-        console.error("[Preview] Error processing HTML:", error);
-        setProcessingError(error instanceof Error ? error : new Error('Unknown error processing HTML'));
-        
-        // Fall back to the original HTML content if expansion fails
-        const sanitizedHtml = sanitizeHtml(htmlContent);
-        const styledHtml = applyStylesToHtml(sanitizedHtml, previewMode, paperSize, orientation, showGuides);
-        
-        setProcessedHtml(styledHtml);
-        handleIframeError(error, htmlContent);
-      } finally {
-        setIsProcessing(false);
-      }
-    };
+  // Processed HTML content with expanded image references
+  const processHtml = useCallback(async () => {
+    setIsProcessing(true);
+    setProcessingError(null);
     
-    // Start processing
-    processHtml();
+    try {
+      console.log("[Preview] Starting image reference expansion");
+      
+      // Process the HTML content to expand image references
+      const expandedHtml = await expandImageReferences(htmlContent);
+      
+      // Sanitize and style the expanded HTML
+      const sanitizedHtml = sanitizeHtml(expandedHtml);
+      const styledHtml = applyStylesToHtml(sanitizedHtml, previewMode, paperSize, orientation, showGuides);
+      
+      setProcessedHtml(styledHtml);
+    } catch (error) {
+      console.error("[Preview] Error processing HTML:", error);
+      setProcessingError(error instanceof Error ? error : new Error('Unknown error processing HTML'));
+      
+      // Fall back to the original HTML content if expansion fails
+      const sanitizedHtml = sanitizeHtml(htmlContent);
+      const styledHtml = applyStylesToHtml(sanitizedHtml, previewMode, paperSize, orientation, showGuides);
+      
+      setProcessedHtml(styledHtml);
+      handleIframeError(error, htmlContent);
+    } finally {
+      setIsProcessing(false);
+    }
   }, [htmlContent, previewMode, paperSize, orientation, showGuides]);
+
+  // Process HTML whenever inputs change
+  useEffect(() => {
+    processHtml();
+  }, [processHtml]);
 
   // Update iframe content when processedHtml changes
   useEffect(() => {
@@ -77,9 +78,28 @@ const PreviewCore = ({
       
       // Add event listeners to all images in the iframe to handle load errors
       const images = document.querySelectorAll('img');
+      let imagesLoaded = 0;
+      const totalImages = images.length;
+      
+      // If there are no images, consider it fully loaded
+      if (totalImages === 0) {
+        console.log("[Preview] Preview updated with processed HTML (no images)");
+        return;
+      }
+      
       images.forEach(img => {
+        // Handle image load
+        img.addEventListener('load', () => {
+          imagesLoaded++;
+          if (imagesLoaded === totalImages) {
+            console.log("[Preview] All images loaded successfully");
+          }
+        });
+        
+        // Handle image load errors
         img.addEventListener('error', (e) => {
           console.error('[Preview] Image failed to load:', e);
+          imagesLoaded++;
           // The onerror attribute in the img tag will handle the display of a placeholder
         });
       });

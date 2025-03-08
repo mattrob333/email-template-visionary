@@ -56,8 +56,17 @@ export const expandImageReferences = async (html: string): Promise<string> => {
           
           if (!image) {
             console.error(`[expandImageReferences] Image with ID ${imageId} not found`);
-            resultHTML = resultHTML.replace(fullMatch, `<img src="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='100' height='100' viewBox='0 0 100 100'%3E%3Crect width='100' height='100' fill='%23f0f0f0'/%3E%3Ctext x='50' y='50' font-family='Arial' font-size='12' text-anchor='middle' dominant-baseline='middle' fill='%23999'%3EImage Not Found%3C/text%3E%3C/svg%3E" alt="Missing Image" style="max-width:100%;height:auto;" />`);
+            resultHTML = resultHTML.replace(
+              fullMatch, 
+              `<img src="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='100' height='100' viewBox='0 0 100 100'%3E%3Crect width='100' height='100' fill='%23f0f0f0'/%3E%3Ctext x='50' y='50' font-family='Arial' font-size='12' text-anchor='middle' dominant-baseline='middle' fill='%23999'%3EImage Not Found%3C/text%3E%3C/svg%3E" alt="Missing Image" style="max-width:100%;height:auto;" />`
+            );
             continue; // Skip to the next image reference
+          }
+          
+          // Verify that the image data is properly formatted
+          if (image.image_data && !image.image_data.startsWith('data:')) {
+            image.image_data = `data:${image.image_type || 'image/png'};base64,${image.image_data}`;
+            console.log(`[expandImageReferences] Fixed image data format for ${imageId}`);
           }
           
           // Cache the image for potential reuse
@@ -76,7 +85,10 @@ export const expandImageReferences = async (html: string): Promise<string> => {
       } catch (err) {
         console.error(`[expandImageReferences] Error processing image ${imageId}:`, err);
         // Replace with a placeholder if fetch fails
-        resultHTML = resultHTML.replace(fullMatch, `<img src="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='100' height='100' viewBox='0 0 100 100'%3E%3Crect width='100' height='100' fill='%23f0f0f0'/%3E%3Ctext x='50' y='50' font-family='Arial' font-size='12' text-anchor='middle' dominant-baseline='middle' fill='%23999'%3EImage Error%3C/text%3E%3C/svg%3E" alt="Failed to load image" style="max-width:100%;height:auto;" />`);
+        resultHTML = resultHTML.replace(
+          fullMatch, 
+          `<img src="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='100' height='100' viewBox='0 0 100 100'%3E%3Crect width='100' height='100' fill='%23f0f0f0'/%3E%3Ctext x='50' y='50' font-family='Arial' font-size='12' text-anchor='middle' dominant-baseline='middle' fill='%23999'%3EImage Error%3C/text%3E%3C/svg%3E" alt="Failed to load image" style="max-width:100%;height:auto;" />`
+        );
       }
     }
     
