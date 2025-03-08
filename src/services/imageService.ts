@@ -97,6 +97,7 @@ export const deleteImage = async (id: string): Promise<boolean> => {
  */
 export const getImageById = async (id: string): Promise<EmailImage | null> => {
   try {
+    console.log('Fetching image with ID:', id);
     const { data, error } = await supabase
       .from('email_images')
       .select('*')
@@ -108,6 +109,7 @@ export const getImageById = async (id: string): Promise<EmailImage | null> => {
       throw error;
     }
     
+    console.log('Image fetched successfully:', data ? 'Found' : 'Not found');
     return data as EmailImage;
   } catch (error) {
     console.error('Failed to fetch image:', error);
@@ -183,34 +185,62 @@ export const expandImageReferences = async (html: string): Promise<string> => {
   // Find all image references in the format {{IMAGE:id}}
   const regex = /\{\{IMAGE:([a-zA-Z0-9-]+)\}\}/g;
   let result = html;
-  let match;
-
-  const promises: Promise<void>[] = [];
-  const replacements: { search: string; replace: string }[] = [];
-
-  while ((match = regex.exec(html)) !== null) {
-    const fullMatch = match[0];
-    const imageId = match[1];
+  
+  try {
+    console.log('Expanding image references...');
     
-    const promise = getImageById(imageId).then(image => {
-      if (image) {
-        // Generate a proper img tag with the base64 data
-        replacements.push({
-          search: fullMatch,
-          replace: generateImgTag(image)
-        });
+    // Get all matches and create a map of promises to fetch the images
+    const matches = Array.from(html.matchAll(regex));
+    if (matches.length === 0) {
+      console.log('No image references found.');
+      return html;
+    }
+    
+    console.log(`Found ${matches.length} image references to expand.`);
+    
+    // Create an array of promises
+    const promises = matches.map(async (match) => {
+      const fullMatch = match[0];
+      const imageId = match[1];
+      
+      console.log(`Processing image reference: ${fullMatch} with ID: ${imageId}`);
+      
+      try {
+        const image = await getImageById(imageId);
+        if (image) {
+          console.log(`Found image data for ID ${imageId}`);
+          // Generate a proper img tag with the base64 data
+          const imgTag = generateImgTag(image);
+          // Return the replacement data
+          return { search: fullMatch, replace: imgTag };
+        } else {
+          console.error(`Image with ID ${imageId} not found`);
+          return null;
+        }
+      } catch (err) {
+        console.error(`Error processing image reference ${imageId}:`, err);
+        return null;
       }
     });
     
-    promises.push(promise);
+    // Wait for all promises to resolve
+    const replacements = await Promise.all(promises);
+    
+    // Apply all valid replacements
+    replacements.filter(Boolean).forEach(replacement => {
+      if (replacement) {
+        const { search, replace } = replacement;
+        // Use a global replacement with regex to handle multiple occurrences
+        const escapedSearch = search.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+        result = result.replace(new RegExp(escapedSearch, 'g'), replace);
+      }
+    });
+    
+    console.log('Image references expansion completed.');
+    return result;
+  } catch (error) {
+    console.error('Error expanding image references:', error);
+    // Return the original HTML if there's an error
+    return html;
   }
-
-  await Promise.all(promises);
-  
-  // Apply all replacements
-  replacements.forEach(({search, replace}) => {
-    result = result.replace(new RegExp(search.replace(/[.*+?^${}()|[\]\\]/g, '\\$&'), 'g'), replace);
-  });
-  
-  return result;
 };

@@ -1,8 +1,10 @@
+
 import { useRef, useEffect, forwardRef, useImperativeHandle } from 'react';
 import { sanitizeHtml } from '../utils/exportUtils';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import html2canvas from 'html2canvas';
 import { expandImageReferences } from '../services/imageService';
+import { toast } from 'sonner';
 
 interface PreviewProps {
   htmlContent: string;
@@ -150,6 +152,7 @@ const Preview = forwardRef<PreviewRef, PreviewProps>(({
             document.close();
           } catch (error) {
             console.error("Error expanding image references:", error);
+            toast.error("Failed to load images in the preview");
             let styledHtml = sanitizeHtml(htmlContent);
             document.write(styledHtml);
             document.close();
