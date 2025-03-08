@@ -8,21 +8,36 @@ export const capturePreviewAsImage = async (
   iframeRef: React.RefObject<HTMLIFrameElement>
 ): Promise<string | null> => {
   try {
-    if (!iframeRef.current) return null;
+    if (!iframeRef.current) {
+      console.error('No iframe reference available for capture');
+      return generateFallbackThumbnail();
+    }
     
     const iframe = iframeRef.current;
     const iframeDocument = iframe.contentDocument || iframe.contentWindow?.document;
     
-    if (!iframeDocument || !iframeDocument.body) return null;
+    if (!iframeDocument || !iframeDocument.body) {
+      console.error('No document or body found in iframe for capture');
+      return generateFallbackThumbnail();
+    }
     
-    await new Promise(resolve => setTimeout(resolve, 100));
+    // Wait a moment to ensure content is fully rendered
+    await new Promise(resolve => setTimeout(resolve, 300));
     
+    // Create a canvas from the iframe content
     const canvas = await html2canvas(iframeDocument.body, {
       scale: 0.3,
       logging: false,
       backgroundColor: null,
       allowTaint: true,
-      useCORS: true
+      useCORS: true,
+      onclone: (clonedDoc) => {
+        // Ensure images are loaded in cloned document
+        const images = clonedDoc.getElementsByTagName('img');
+        if (images.length > 0) {
+          console.log(`Processing ${images.length} images for capture`);
+        }
+      }
     });
     
     const dataUrl = canvas.toDataURL('image/png');
@@ -42,7 +57,10 @@ export const generateFallbackThumbnail = (): string | null => {
     canvas.height = 200;
     
     const ctx = canvas.getContext('2d');
-    if (!ctx) return null;
+    if (!ctx) {
+      console.error('Could not get canvas context for fallback thumbnail');
+      return null;
+    }
     
     ctx.fillStyle = '#f5f5f5';
     ctx.fillRect(0, 0, canvas.width, canvas.height);

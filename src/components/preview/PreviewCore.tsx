@@ -1,5 +1,5 @@
 
-import { useRef, useEffect } from 'react';
+import { useEffect, useState } from 'react';
 import { sanitizeHtml } from '../../utils/exportUtils';
 import { expandImageReferences } from '../../services/imageService';
 import { applyStylesToHtml, getPaperDimensions, handleIframeError } from './PreviewUtils';
@@ -21,42 +21,55 @@ const PreviewCore = ({
   showGuides,
   iframeRef
 }: PreviewCoreProps) => {
+  const [processedHtml, setProcessedHtml] = useState('');
+  const [isProcessing, setIsProcessing] = useState(false);
+
   useEffect(() => {
-    const updateIframeContent = async () => {
-      if (!iframeRef.current) return;
-      
-      const iframe = iframeRef.current;
-      const document = iframe.contentDocument || iframe.contentWindow?.document;
-      
-      if (!document) return;
-      
-      document.open();
-      
+    const processHtml = async () => {
+      setIsProcessing(true);
       try {
         console.log("[Preview] Starting image reference expansion");
         
+        // Process the HTML content to expand image references
         const expandedHtml = await expandImageReferences(htmlContent);
-        let styledHtml = sanitizeHtml(expandedHtml);
         
-        styledHtml = applyStylesToHtml(styledHtml, previewMode, paperSize, orientation, showGuides);
+        // Sanitize and style the expanded HTML
+        const sanitizedHtml = sanitizeHtml(expandedHtml);
+        const styledHtml = applyStylesToHtml(sanitizedHtml, previewMode, paperSize, orientation, showGuides);
         
-        document.write(styledHtml);
-        document.close();
-        
-        console.log("[Preview] Preview updated with expanded images");
+        setProcessedHtml(styledHtml);
       } catch (error) {
-        let styledHtml = sanitizeHtml(htmlContent);
-        styledHtml = applyStylesToHtml(styledHtml, previewMode, paperSize, orientation, showGuides);
+        console.error("[Preview] Error processing HTML:", error);
         
-        document.write(styledHtml);
-        document.close();
+        // Fall back to the original HTML content if expansion fails
+        const sanitizedHtml = sanitizeHtml(htmlContent);
+        const styledHtml = applyStylesToHtml(sanitizedHtml, previewMode, paperSize, orientation, showGuides);
         
+        setProcessedHtml(styledHtml);
         handleIframeError(error, htmlContent);
+      } finally {
+        setIsProcessing(false);
       }
     };
     
-    updateIframeContent();
-  }, [htmlContent, previewMode, paperSize, orientation, showGuides, iframeRef]);
+    processHtml();
+  }, [htmlContent, previewMode, paperSize, orientation, showGuides]);
+
+  // Update iframe content when processedHtml changes
+  useEffect(() => {
+    if (!iframeRef.current || !processedHtml || isProcessing) return;
+    
+    const iframe = iframeRef.current;
+    const document = iframe.contentDocument || iframe.contentWindow?.document;
+    
+    if (!document) return;
+    
+    document.open();
+    document.write(processedHtml);
+    document.close();
+    
+    console.log("[Preview] Preview updated with processed HTML");
+  }, [processedHtml, iframeRef, isProcessing]);
 
   const previewContainerClass = previewMode === 'print' 
     ? 'w-full h-full bg-gray-100 p-6 flex justify-center'

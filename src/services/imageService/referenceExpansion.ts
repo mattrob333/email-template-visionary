@@ -31,7 +31,10 @@ export const expandImageReferences = async (html: string): Promise<string> => {
     // Create a copy of the original HTML to work with
     let resultHTML = html;
     
-    // Process each match sequentially
+    // Cache for already processed images to avoid duplicate fetches
+    const imageCache = new Map();
+    
+    // Process each match sequentially with better error handling
     for (const match of matches) {
       const fullMatch = match[0]; // The full {{IMAGE:id}} string
       const imageId = match[1];   // Just the ID part
@@ -39,12 +42,25 @@ export const expandImageReferences = async (html: string): Promise<string> => {
       console.log(`[expandImageReferences] Processing reference: ${fullMatch} for ID: ${imageId}`);
       
       try {
-        // Fetch image data from Supabase
-        const image = await getImageById(imageId);
+        // Check if the image is already in the cache
+        let image = imageCache.get(imageId);
         
         if (!image) {
-          console.error(`[expandImageReferences] Image with ID ${imageId} not found`);
-          continue; // Skip this image and continue with others
+          // Fetch image data from Supabase with timeout
+          const fetchPromise = getImageById(imageId);
+          const timeoutPromise = new Promise((_, reject) => 
+            setTimeout(() => reject(new Error('Fetch timeout')), 10000)
+          );
+          
+          image = await Promise.race([fetchPromise, timeoutPromise]);
+          
+          if (!image) {
+            console.error(`[expandImageReferences] Image with ID ${imageId} not found`);
+            continue; // Skip this image and continue with others
+          }
+          
+          // Cache the image for potential reuse
+          imageCache.set(imageId, image);
         }
         
         console.log(`[expandImageReferences] Successfully fetched image: ${image.name}`);
@@ -55,12 +71,15 @@ export const expandImageReferences = async (html: string): Promise<string> => {
         // Replace all occurrences of this image reference
         console.log(`[expandImageReferences] Replacing ${fullMatch} with img tag`);
         
-        // Use direct string replacement which is more reliable
+        // Use split and join which is more reliable for string replacement
         resultHTML = resultHTML.split(fullMatch).join(imgTag);
         
         console.log(`[expandImageReferences] Replacement completed for ${imageId}`);
       } catch (err) {
         console.error(`[expandImageReferences] Error processing image ${imageId}:`, err);
+        // Replace with a placeholder if fetch fails
+        const errorPlaceholder = `<img src="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='100' height='100' viewBox='0 0 100 100'%3E%3Crect width='100' height='100' fill='%23f0f0f0'/%3E%3Ctext x='50' y='50' font-family='Arial' font-size='12' text-anchor='middle' dominant-baseline='middle' fill='%23999'%3EImage Error%3C/text%3E%3C/svg%3E" alt="Failed to load image" style="max-width:100%;height:auto;" />`;
+        resultHTML = resultHTML.split(fullMatch).join(errorPlaceholder);
         // Continue with other images even if one fails
       }
     }
