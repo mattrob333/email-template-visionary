@@ -82,135 +82,139 @@ const Preview = forwardRef<PreviewRef, PreviewProps>(({
 
   useEffect(() => {
     const updateIframeContent = async () => {
-      if (iframeRef.current) {
-        const iframe = iframeRef.current;
-        const document = iframe.contentDocument || iframe.contentWindow?.document;
+      if (!iframeRef.current) return;
+      
+      const iframe = iframeRef.current;
+      const document = iframe.contentDocument || iframe.contentWindow?.document;
+      
+      if (!document) return;
+      
+      document.open();
+      
+      try {
+        console.log("[Preview] Starting image reference expansion");
         
-        if (document) {
-          document.open();
+        const expandedHtml = await expandImageReferences(htmlContent);
+        let styledHtml = sanitizeHtml(expandedHtml);
+        
+        if (previewMode === 'print') {
+          const dimensions = getPaperDimensions(paperSize, orientation);
           
-          try {
-            console.log("Expanding image references...");
-            const expandedHtml = await expandImageReferences(htmlContent);
-            let styledHtml = sanitizeHtml(expandedHtml);
-            
-            if (previewMode === 'print') {
-              const dimensions = getPaperDimensions(paperSize, orientation);
-              
-              const printStyles = `
-                <style>
-                  @page {
-                    size: ${paperSize} ${orientation};
-                    margin: 0;
-                  }
-                  body {
-                    margin: 0;
-                    padding: 15mm;
-                    box-sizing: border-box;
-                    width: ${dimensions.width}px;
-                    height: ${dimensions.height}px;
-                    position: relative;
-                  }
-                  ${showGuides ? `
-                  /* Guides and markers */
-                  body::before {
-                    content: '';
-                    position: absolute;
-                    top: 0;
-                    left: 0;
-                    right: 0;
-                    bottom: 0;
-                    border: 1px dashed #aaa;
-                    pointer-events: none;
-                    z-index: 9999;
-                  }
-                  /* Grid lines */
-                  body::after {
-                    content: '';
-                    position: absolute;
-                    top: 15mm;
-                    left: 15mm;
-                    right: 15mm;
-                    bottom: 15mm;
-                    background-image: linear-gradient(#eee 1px, transparent 1px), 
-                                      linear-gradient(90deg, #eee 1px, transparent 1px);
-                    background-size: 25mm 25mm;
-                    pointer-events: none;
-                    z-index: 9998;
-                  }
-                  ` : ''}
-                </style>
-              `;
-              
-              styledHtml = styledHtml.replace(/<head>/, `<head>${printStyles}`);
-            } else {
-              styledHtml = styledHtml.replace(/@page\s*{[^}]*}/g, '');
-            }
-            
-            document.write(styledHtml);
-            document.close();
-          } catch (error) {
-            console.error("Error expanding image references:", error);
-            toast.error("Failed to load images in the preview");
-            
-            let styledHtml = sanitizeHtml(htmlContent);
-            if (previewMode === 'print') {
-              const dimensions = getPaperDimensions(paperSize, orientation);
-              
-              const printStyles = `
-                <style>
-                  @page {
-                    size: ${paperSize} ${orientation};
-                    margin: 0;
-                  }
-                  body {
-                    margin: 0;
-                    padding: 15mm;
-                    box-sizing: border-box;
-                    width: ${dimensions.width}px;
-                    height: ${dimensions.height}px;
-                    position: relative;
-                  }
-                  ${showGuides ? `
-                  /* Guides and markers */
-                  body::before {
-                    content: '';
-                    position: absolute;
-                    top: 0;
-                    left: 0;
-                    right: 0;
-                    bottom: 0;
-                    border: 1px dashed #aaa;
-                    pointer-events: none;
-                    z-index: 9999;
-                  }
-                  /* Grid lines */
-                  body::after {
-                    content: '';
-                    position: absolute;
-                    top: 15mm;
-                    left: 15mm;
-                    right: 15mm;
-                    bottom: 15mm;
-                    background-image: linear-gradient(#eee 1px, transparent 1px), 
-                                      linear-gradient(90deg, #eee 1px, transparent 1px);
-                    background-size: 25mm 25mm;
-                    pointer-events: none;
-                    z-index: 9998;
-                  }
-                  ` : ''}
-                </style>
-              `;
-              
-              styledHtml = styledHtml.replace(/<head>/, `<head>${printStyles}`);
-            } else {
-              styledHtml = styledHtml.replace(/@page\s*{[^}]*}/g, '');
-            }
-            
-            document.write(styledHtml);
-            document.close();
-          }
+          const printStyles = `
+            <style>
+              @page {
+                size: ${paperSize} ${orientation};
+                margin: 0;
+              }
+              body {
+                margin: 0;
+                padding: 15mm;
+                box-sizing: border-box;
+                width: ${dimensions.width}px;
+                height: ${dimensions.height}px;
+                position: relative;
+              }
+              ${showGuides ? `
+              /* Guides and markers */
+              body::before {
+                content: '';
+                position: absolute;
+                top: 0;
+                left: 0;
+                right: 0;
+                bottom: 0;
+                border: 1px dashed #aaa;
+                pointer-events: none;
+                z-index: 9999;
+              }
+              /* Grid lines */
+              body::after {
+                content: '';
+                position: absolute;
+                top: 15mm;
+                left: 15mm;
+                right: 15mm;
+                bottom: 15mm;
+                background-image: linear-gradient(#eee 1px, transparent 1px), 
+                                  linear-gradient(90deg, #eee 1px, transparent 1px);
+                background-size: 25mm 25mm;
+                pointer-events: none;
+                z-index: 9998;
+              }
+              ` : ''}
+            </style>
+          `;
+          
+          styledHtml = styledHtml.replace(/<head>/, `<head>${printStyles}`);
+        } else {
+          styledHtml = styledHtml.replace(/@page\s*{[^}]*}/g, '');
         }
+        
+        document.write(styledHtml);
+        document.close();
+        
+        console.log("[Preview] Preview updated with expanded images");
+      } catch (error) {
+        console.error("[Preview] Error processing HTML for preview:", error);
+        toast.error("Failed to render images in preview");
+        
+        let styledHtml = sanitizeHtml(htmlContent);
+        
+        if (previewMode === 'print') {
+          const dimensions = getPaperDimensions(paperSize, orientation);
+          
+          const printStyles = `
+            <style>
+              @page {
+                size: ${paperSize} ${orientation};
+                margin: 0;
+              }
+              body {
+                margin: 0;
+                padding: 15mm;
+                box-sizing: border-box;
+                width: ${dimensions.width}px;
+                height: ${dimensions.height}px;
+                position: relative;
+              }
+              ${showGuides ? `
+              /* Guides and markers */
+              body::before {
+                content: '';
+                position: absolute;
+                top: 0;
+                left: 0;
+                right: 0;
+                bottom: 0;
+                border: 1px dashed #aaa;
+                pointer-events: none;
+                z-index: 9999;
+              }
+              /* Grid lines */
+              body::after {
+                content: '';
+                position: absolute;
+                top: 15mm;
+                left: 15mm;
+                right: 15mm;
+                bottom: 15mm;
+                background-image: linear-gradient(#eee 1px, transparent 1px), 
+                                  linear-gradient(90deg, #eee 1px, transparent 1px);
+                background-size: 25mm 25mm;
+                pointer-events: none;
+                z-index: 9998;
+              }
+              ` : ''}
+            </style>
+          `;
+          
+          styledHtml = styledHtml.replace(/<head>/, `<head>${printStyles}`);
+        } else {
+          styledHtml = styledHtml.replace(/@page\s*{[^}]*}/g, '');
+        }
+        
+        document.write(styledHtml);
+        document.close();
       }
     };
     

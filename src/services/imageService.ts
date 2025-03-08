@@ -1,3 +1,4 @@
+
 import { supabase } from '@/integrations/supabase/client';
 
 export interface EmailImage {
@@ -179,55 +180,74 @@ export const generateImageReference = (image: EmailImage): string => {
 
 /**
  * Replaces all image references in the HTML with the actual base64 data
+ * 
+ * FIXED: This function now properly processes and replaces image references
  */
 export const expandImageReferences = async (html: string): Promise<string> => {
   // Find all image references in the format {{IMAGE:id}}
   const regex = /\{\{IMAGE:([a-zA-Z0-9-]+)\}\}/g;
-  let result = html;
   
   try {
-    console.log('Expanding image references...');
+    console.log('[expandImageReferences] Starting processing');
     
-    // Get all matches
-    const matches = Array.from(html.matchAll(regex));
-    if (matches.length === 0) {
-      console.log('No image references found.');
+    // If no references, return original HTML immediately
+    if (!html.includes('{{IMAGE:')) {
+      console.log('[expandImageReferences] No image references found');
       return html;
     }
     
-    console.log(`Found ${matches.length} image references to expand.`);
+    // Get all matches as an array
+    const matches = Array.from(html.matchAll(regex));
     
-    // Process each match sequentially to ensure order is maintained
+    if (matches.length === 0) {
+      console.log('[expandImageReferences] No image references detected via regex');
+      return html;
+    }
+    
+    console.log(`[expandImageReferences] Found ${matches.length} image references`);
+    
+    // Create a copy of the original HTML to work with
+    let resultHTML = html;
+    
+    // Process each match sequentially
     for (const match of matches) {
-      const fullMatch = match[0];
-      const imageId = match[1];
+      const fullMatch = match[0]; // The full {{IMAGE:id}} string
+      const imageId = match[1];   // Just the ID part
       
-      console.log(`Processing image reference: ${fullMatch} with ID: ${imageId}`);
+      console.log(`[expandImageReferences] Processing reference: ${fullMatch} for ID: ${imageId}`);
       
       try {
+        // Fetch image data from Supabase
         const image = await getImageById(imageId);
-        if (image) {
-          console.log(`Found image data for ID ${imageId}`);
-          // Generate a proper img tag with the base64 data
-          const imgTag = generateImgTag(image);
-          // Escape special characters in the search string for RegExp
-          const escapedSearch = fullMatch.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
-          // Replace the image reference with the actual image tag
-          result = result.replace(new RegExp(escapedSearch, 'g'), imgTag);
-          console.log(`Replaced ${fullMatch} with image tag`);
-        } else {
-          console.error(`Image with ID ${imageId} not found`);
+        
+        if (!image) {
+          console.error(`[expandImageReferences] Image with ID ${imageId} not found`);
+          continue; // Skip this image and continue with others
         }
+        
+        console.log(`[expandImageReferences] Successfully fetched image: ${image.name}`);
+        
+        // Generate proper img tag with base64 data
+        const imgTag = generateImgTag(image);
+        
+        // Replace all occurrences of this image reference
+        console.log(`[expandImageReferences] Replacing ${fullMatch} with img tag`);
+        
+        // Use direct string replacement which is more reliable
+        resultHTML = resultHTML.split(fullMatch).join(imgTag);
+        
+        console.log(`[expandImageReferences] Replacement completed for ${imageId}`);
       } catch (err) {
-        console.error(`Error processing image reference ${imageId}:`, err);
+        console.error(`[expandImageReferences] Error processing image ${imageId}:`, err);
+        // Continue with other images even if one fails
       }
     }
     
-    console.log('Image references expansion completed.');
-    return result;
+    console.log('[expandImageReferences] All replacements completed');
+    return resultHTML;
   } catch (error) {
-    console.error('Error expanding image references:', error);
-    // Return the original HTML if there's an error
+    console.error('[expandImageReferences] Fatal error during processing:', error);
+    // Return the original HTML if there's a fatal error
     return html;
   }
 };
