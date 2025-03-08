@@ -194,10 +194,10 @@ export const expandImageReferences = async (html: string): Promise<string> => {
     
     const promise = getImageById(imageId).then(image => {
       if (image) {
-        // Instead of just replacing with the base64 data, replace with a proper img tag
+        // Generate a proper img tag with the base64 data
         replacements.push({
           search: fullMatch,
-          replace: image.image_data
+          replace: generateImgTag(image)
         });
       }
     });
