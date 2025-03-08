@@ -3,6 +3,7 @@ import { useEffect, useState } from 'react';
 import { sanitizeHtml } from '../../utils/exportUtils';
 import { expandImageReferences } from '../../services/imageService';
 import { applyStylesToHtml, getPaperDimensions, handleIframeError } from './PreviewUtils';
+import { toast } from 'sonner';
 
 interface PreviewCoreProps {
   htmlContent: string;
@@ -23,10 +24,13 @@ const PreviewCore = ({
 }: PreviewCoreProps) => {
   const [processedHtml, setProcessedHtml] = useState('');
   const [isProcessing, setIsProcessing] = useState(false);
+  const [processingError, setProcessingError] = useState<Error | null>(null);
 
   useEffect(() => {
     const processHtml = async () => {
       setIsProcessing(true);
+      setProcessingError(null);
+      
       try {
         console.log("[Preview] Starting image reference expansion");
         
@@ -40,6 +44,7 @@ const PreviewCore = ({
         setProcessedHtml(styledHtml);
       } catch (error) {
         console.error("[Preview] Error processing HTML:", error);
+        setProcessingError(error instanceof Error ? error : new Error('Unknown error processing HTML'));
         
         // Fall back to the original HTML content if expansion fails
         const sanitizedHtml = sanitizeHtml(htmlContent);
@@ -52,6 +57,7 @@ const PreviewCore = ({
       }
     };
     
+    // Start processing
     processHtml();
   }, [htmlContent, previewMode, paperSize, orientation, showGuides]);
 
@@ -64,11 +70,25 @@ const PreviewCore = ({
     
     if (!document) return;
     
-    document.open();
-    document.write(processedHtml);
-    document.close();
-    
-    console.log("[Preview] Preview updated with processed HTML");
+    try {
+      document.open();
+      document.write(processedHtml);
+      document.close();
+      
+      // Add event listeners to all images in the iframe to handle load errors
+      const images = document.querySelectorAll('img');
+      images.forEach(img => {
+        img.addEventListener('error', (e) => {
+          console.error('[Preview] Image failed to load:', e);
+          // The onerror attribute in the img tag will handle the display of a placeholder
+        });
+      });
+      
+      console.log("[Preview] Preview updated with processed HTML");
+    } catch (error) {
+      console.error("[Preview] Error writing to iframe:", error);
+      toast.error("Error rendering preview");
+    }
   }, [processedHtml, iframeRef, isProcessing]);
 
   const previewContainerClass = previewMode === 'print' 
@@ -88,6 +108,15 @@ const PreviewCore = ({
 
   return (
     <div className={`w-full h-full overflow-hidden rounded-md border border-border/50 bg-white ${previewContainerClass}`}>
+      {isProcessing && (
+        <div className="absolute inset-0 bg-black/10 flex items-center justify-center z-10">
+          <div className="bg-background p-4 rounded-md shadow-lg">
+            <div className="animate-spin h-6 w-6 border-2 border-primary border-t-transparent rounded-full mx-auto mb-2"></div>
+            <p className="text-sm text-muted-foreground">Processing images...</p>
+          </div>
+        </div>
+      )}
+      
       <iframe 
         ref={iframeRef} 
         title="Content Preview" 
@@ -95,6 +124,14 @@ const PreviewCore = ({
         sandbox="allow-same-origin"
         style={iframeStyle}
       />
+      
+      {processingError && (
+        <div className="absolute bottom-4 right-4">
+          <div className="bg-destructive text-destructive-foreground px-4 py-2 rounded-md text-sm shadow-lg">
+            Error processing template
+          </div>
+        </div>
+      )}
     </div>
   );
 };

@@ -17,7 +17,8 @@ export const generateImgTag = (image: EmailImage): string => {
       console.warn('Image data does not have correct format, adding prefix:', image.id);
       image.image_data = `data:${image.image_type || 'image/png'};base64,${image.image_data}`;
     }
-
+    
+    // Create a properly formed img tag with error handling
     return `<img 
       src="${image.image_data}" 
       alt="${image.name || ''}" 
