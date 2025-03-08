@@ -1,3 +1,4 @@
+
 import React from 'react';
 
 /**
@@ -121,28 +122,65 @@ export const exportAsPdf = async (
     if (!iframeRef.current) return false;
     
     const iframe = iframeRef.current;
-    const document = iframe.contentDocument || iframe.contentWindow?.document;
+    const iframeDocument = iframe.contentDocument || iframe.contentWindow?.document;
     
-    if (!document) return false;
+    if (!iframeDocument) return false;
     
     // Import html2pdf dynamically
     const html2pdf = (await import('html2pdf.js')).default;
+    
+    // Create a clone of the iframe document to avoid modifying the original
+    const documentClone = iframeDocument.documentElement.cloneNode(true) as HTMLElement;
+    
+    // Ensure styles are preserved exactly as they appear in the preview
+    const allStyles = Array.from(iframeDocument.styleSheets)
+      .map(styleSheet => {
+        try {
+          return Array.from(styleSheet.cssRules)
+            .map(rule => rule.cssText)
+            .join('\n');
+        } catch (e) {
+          // Cross-origin style sheets can't be accessed
+          return '';
+        }
+      })
+      .filter(Boolean)
+      .join('\n');
+    
+    // Create a style element with all the styles
+    const styleElement = iframeDocument.createElement('style');
+    styleElement.textContent = allStyles;
+    
+    // Ensure the style element is in the head
+    const head = documentClone.querySelector('head');
+    if (head) {
+      head.appendChild(styleElement);
+    }
     
     // Configure pdf options
     const opts = {
       margin: 10,
       filename: options.filename || 'email-template.pdf',
       image: { type: 'jpeg', quality: 0.98 },
-      html2canvas: { scale: 2, useCORS: true },
+      html2canvas: { 
+        scale: 2, 
+        useCORS: true,
+        backgroundColor: null, // Transparent background to preserve the document's background
+        logging: false,
+        allowTaint: true,
+        foreignObjectRendering: false, // This can help with rendering complex elements
+      },
       jsPDF: {
         unit: 'mm',
         format: options.pageSize || 'letter',
-        orientation: options.orientation || 'portrait'
+        orientation: options.orientation || 'portrait',
+        compress: true,
+        putOnlyUsedFonts: true,
       }
     };
     
-    // Generate PDF from document body
-    await html2pdf().from(document.body).set(opts).save();
+    // Use iframe's current document - not the clone - to preserve exact rendering
+    await html2pdf().from(iframeDocument.documentElement).set(opts).save();
     return true;
   } catch (err) {
     console.error('Failed to export as PDF: ', err);

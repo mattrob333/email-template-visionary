@@ -220,9 +220,9 @@ const Index = () => {
     setIsExporting(true);
     
     exportAsPdf(previewRef.current.getIframeRef(), {
-      pageSize: 'letter',
-      orientation: 'portrait',
-      filename: 'document.pdf'
+      pageSize: paperSize,
+      orientation: orientation,
+      filename: 'email-template.pdf'
     }).then(success => {
       setIsExporting(false);
       if (success) {
@@ -230,7 +230,8 @@ const Index = () => {
       } else {
         toast.error('Failed to export PDF');
       }
-    }).catch(() => {
+    }).catch((error) => {
+      console.error('PDF export error:', error);
       setIsExporting(false);
       toast.error('Failed to export PDF');
     });

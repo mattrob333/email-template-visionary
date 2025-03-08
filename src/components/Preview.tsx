@@ -45,7 +45,7 @@ const Preview = forwardRef<PreviewRef, PreviewProps>(({
         const canvas = await html2canvas(iframeDocument.body, {
           scale: 0.3,
           logging: false,
-          backgroundColor: '#FFFFFF',
+          backgroundColor: null, // Use transparent to preserve actual background
           allowTaint: true,
           useCORS: true
         });
@@ -144,6 +144,9 @@ const Preview = forwardRef<PreviewRef, PreviewProps>(({
             `;
             
             styledHtml = styledHtml.replace(/<head>/, `<head>${printStyles}`);
+          } else {
+            // Make sure no print-specific styles interfere with the email preview
+            styledHtml = styledHtml.replace(/@page\s*{[^}]*}/g, '');
           }
           
           document.write(styledHtml);
