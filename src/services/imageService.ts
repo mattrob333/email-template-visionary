@@ -1,4 +1,3 @@
-
 import { supabase } from '@/integrations/supabase/client';
 
 export interface EmailImage {
@@ -189,7 +188,7 @@ export const expandImageReferences = async (html: string): Promise<string> => {
   try {
     console.log('Expanding image references...');
     
-    // Get all matches and create a map of promises to fetch the images
+    // Get all matches
     const matches = Array.from(html.matchAll(regex));
     if (matches.length === 0) {
       console.log('No image references found.');
@@ -198,8 +197,8 @@ export const expandImageReferences = async (html: string): Promise<string> => {
     
     console.log(`Found ${matches.length} image references to expand.`);
     
-    // Create an array of promises
-    const promises = matches.map(async (match) => {
+    // Process each match sequentially to ensure order is maintained
+    for (const match of matches) {
       const fullMatch = match[0];
       const imageId = match[1];
       
@@ -211,30 +210,18 @@ export const expandImageReferences = async (html: string): Promise<string> => {
           console.log(`Found image data for ID ${imageId}`);
           // Generate a proper img tag with the base64 data
           const imgTag = generateImgTag(image);
-          // Return the replacement data
-          return { search: fullMatch, replace: imgTag };
+          // Escape special characters in the search string for RegExp
+          const escapedSearch = fullMatch.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+          // Replace the image reference with the actual image tag
+          result = result.replace(new RegExp(escapedSearch, 'g'), imgTag);
+          console.log(`Replaced ${fullMatch} with image tag`);
         } else {
           console.error(`Image with ID ${imageId} not found`);
-          return null;
         }
       } catch (err) {
         console.error(`Error processing image reference ${imageId}:`, err);
-        return null;
       }
-    });
-    
-    // Wait for all promises to resolve
-    const replacements = await Promise.all(promises);
-    
-    // Apply all valid replacements
-    replacements.filter(Boolean).forEach(replacement => {
-      if (replacement) {
-        const { search, replace } = replacement;
-        // Use a global replacement with regex to handle multiple occurrences
-        const escapedSearch = search.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
-        result = result.replace(new RegExp(escapedSearch, 'g'), replace);
-      }
-    });
+    }
     
     console.log('Image references expansion completed.');
     return result;

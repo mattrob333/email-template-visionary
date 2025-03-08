@@ -1,4 +1,3 @@
-
 import { useRef, useEffect, forwardRef, useImperativeHandle } from 'react';
 import { sanitizeHtml } from '../utils/exportUtils';
 import { ScrollArea } from '@/components/ui/scroll-area';
@@ -153,7 +152,61 @@ const Preview = forwardRef<PreviewRef, PreviewProps>(({
           } catch (error) {
             console.error("Error expanding image references:", error);
             toast.error("Failed to load images in the preview");
+            
             let styledHtml = sanitizeHtml(htmlContent);
+            if (previewMode === 'print') {
+              const dimensions = getPaperDimensions(paperSize, orientation);
+              
+              const printStyles = `
+                <style>
+                  @page {
+                    size: ${paperSize} ${orientation};
+                    margin: 0;
+                  }
+                  body {
+                    margin: 0;
+                    padding: 15mm;
+                    box-sizing: border-box;
+                    width: ${dimensions.width}px;
+                    height: ${dimensions.height}px;
+                    position: relative;
+                  }
+                  ${showGuides ? `
+                  /* Guides and markers */
+                  body::before {
+                    content: '';
+                    position: absolute;
+                    top: 0;
+                    left: 0;
+                    right: 0;
+                    bottom: 0;
+                    border: 1px dashed #aaa;
+                    pointer-events: none;
+                    z-index: 9999;
+                  }
+                  /* Grid lines */
+                  body::after {
+                    content: '';
+                    position: absolute;
+                    top: 15mm;
+                    left: 15mm;
+                    right: 15mm;
+                    bottom: 15mm;
+                    background-image: linear-gradient(#eee 1px, transparent 1px), 
+                                      linear-gradient(90deg, #eee 1px, transparent 1px);
+                    background-size: 25mm 25mm;
+                    pointer-events: none;
+                    z-index: 9998;
+                  }
+                  ` : ''}
+                </style>
+              `;
+              
+              styledHtml = styledHtml.replace(/<head>/, `<head>${printStyles}`);
+            } else {
+              styledHtml = styledHtml.replace(/@page\s*{[^}]*}/g, '');
+            }
+            
             document.write(styledHtml);
             document.close();
           }
