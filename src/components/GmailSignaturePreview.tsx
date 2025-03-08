@@ -4,7 +4,6 @@ import { GmailTemplate } from './GmailTemplates';
 import { Button } from "@/components/ui/button";
 import { Copy } from "lucide-react";
 import { toast } from "sonner";
-import { expandImageReferences } from '../services/imageService';
 
 interface GmailSignaturePreviewProps {
   template: GmailTemplate;
@@ -12,24 +11,16 @@ interface GmailSignaturePreviewProps {
 }
 
 const GmailSignaturePreview = ({ template, onSelect }: GmailSignaturePreviewProps) => {
-  const copyToClipboard = async (e: React.MouseEvent, html: string) => {
+  const copyToClipboard = (e: React.MouseEvent, html: string) => {
     e.stopPropagation();
-    try {
-      // Process the HTML to ensure readability in Gmail
-      const processedHtml = await expandImageReferences(html);
-      
-      await navigator.clipboard.writeText(processedHtml)
-        .then(() => {
-          toast.success("Gmail signature copied to clipboard!");
-        })
-        .catch((err) => {
-          console.error("Failed to copy: ", err);
-          toast.error("Failed to copy to clipboard");
-        });
-    } catch (error) {
-      console.error("Error processing HTML:", error);
-      toast.error("Failed to process HTML for Gmail");
-    }
+    navigator.clipboard.writeText(html)
+      .then(() => {
+        toast.success("Gmail signature copied to clipboard!");
+      })
+      .catch((err) => {
+        console.error("Failed to copy: ", err);
+        toast.error("Failed to copy to clipboard");
+      });
   };
 
   return (

@@ -1,14 +1,11 @@
 import React from 'react';
-import { expandImageReferences } from '../services/imageService';
 
 /**
  * Copies the HTML code to clipboard
  */
 export const copyToClipboard = async (html: string): Promise<boolean> => {
   try {
-    // Process HTML to ensure Gmail compatibility
-    const processedHtml = await expandImageReferences(html);
-    await navigator.clipboard.writeText(processedHtml);
+    await navigator.clipboard.writeText(html);
     return true;
   } catch (err) {
     console.error('Failed to copy: ', err);
@@ -61,10 +58,7 @@ export const copyRenderedContent = async (iframeRef: React.RefObject<HTMLIFrameE
     document.body.appendChild(tempTextArea);
     
     // For Gmail, we need to use the clipboard API with HTML format
-    let formattedContent = iframeDocument.documentElement.innerHTML;
-    
-    // Process HTML to ensure Gmail compatibility with dark templates
-    formattedContent = await expandImageReferences(formattedContent);
+    const formattedContent = iframeDocument.documentElement.innerHTML;
     
     // Create a Clipboard item with HTML format
     const clipboardItem = new ClipboardItem({

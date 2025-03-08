@@ -1,3 +1,4 @@
+
 import { supabase } from '@/integrations/supabase/client';
 
 export interface EmailImage {
@@ -177,7 +178,6 @@ export const generateImageReference = (image: EmailImage): string => {
 
 /**
  * Replaces all image references in the HTML with the actual base64 data
- * Ensures content has proper contrast for Gmail compatibility
  */
 export const expandImageReferences = async (html: string): Promise<string> => {
   // Find all image references in the format {{IMAGE:id}}
@@ -194,10 +194,10 @@ export const expandImageReferences = async (html: string): Promise<string> => {
     
     const promise = getImageById(imageId).then(image => {
       if (image) {
-        // Replace with proper img tag
+        // Instead of just replacing with the base64 data, replace with a proper img tag
         replacements.push({
           search: fullMatch,
-          replace: generateImgTag(image)
+          replace: image.image_data
         });
       }
     });
@@ -211,18 +211,6 @@ export const expandImageReferences = async (html: string): Promise<string> => {
   replacements.forEach(({search, replace}) => {
     result = result.replace(new RegExp(search.replace(/[.*+?^${}()|[\]\\]/g, '\\$&'), 'g'), replace);
   });
-  
-  // Only fix the text color for better contrast in Gmail
-  // Don't change background colors or any other formatting
-  result = result
-    // Change light text on dark backgrounds to dark text
-    .replace(/color:\s*#e0e0e0/g, 'color: #333333')
-    .replace(/color:\s*#ffffff/g, 'color: #222222')
-    .replace(/color:\s*#f3f3f3/g, 'color: #222222')
-    .replace(/color:\s*#f1f1f1/g, 'color: #222222')
-    .replace(/color:\s*#eee/g, 'color: #222222')
-    .replace(/color:\s*#ccc/g, 'color: #444444')
-    .replace(/color:\s*#9ca3af/g, 'color: #666666');
   
   return result;
 };
