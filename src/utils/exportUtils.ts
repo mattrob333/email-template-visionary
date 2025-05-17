@@ -35,10 +35,11 @@ export const openInGmail = (html: string) => {
 export const sanitizeHtml = (html: string): string => {
   // This is a very basic sanitizer
   // In a production app, use a library like DOMPurify
+  // Preserve onerror handler on <img> tags for fallback images
   return html
     .replace(/<script\b[^<]*(?:(?!<\/script>)<[^<]*)*<\/script>/gi, '')
-    .replace(/on\w+="[^"]*"/g, '')
-    .replace(/on\w+='[^']*'/g, '');
+    .replace(/on(?!error)[a-z]+="[^"]*"/gi, '')
+    .replace(/on(?!error)[a-z]+='[^']*'/gi, '');
 };
 
 /**
